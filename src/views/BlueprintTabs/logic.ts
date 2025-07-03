@@ -2,6 +2,7 @@ import { computed, ref, reactive, inject } from 'vue'
 import { ElMessageBox, type FormInstance } from 'element-plus'
 import { blueprintStore } from '../../stores/blueprint'
 import { keyMessage } from '../../panels/provide-inject'
+import { BlueprintSerializer, TypeScriptCodeGenerator } from '../../common/utils/blueprint-serializer'
 import type { CreateFormData, CreateFormRules, TabMethods } from './types'
 
 export const useBlueprintTabs = () => {
@@ -191,6 +192,128 @@ export const useBlueprintTabs = () => {
     input.click()
   }
 
+  // ========== 新的序列化工具方法 ==========
+
+  // 获取当前活跃标签页
+  const activeTab = computed(() => blueprintStore.activeTab)
+
+  // 保存蓝图为JSON文件
+  const saveBlueprint = () => {
+    const tab = activeTab.value
+    if (!tab) {
+      if (showMessage && typeof showMessage === 'function') {
+        showMessage({
+          message: '没有可保存的蓝图',
+          type: 'warning',
+          duration: 2000
+        })
+      }
+      return
+    }
+
+    try {
+      BlueprintSerializer.downloadBlueprint(
+        tab.blueprint,
+        blueprintStore.nodeDefinitions,
+        `${tab.name}.json`
+      )
+      
+      blueprintStore.markTabClean(tab.id)
+      
+      if (showMessage && typeof showMessage === 'function') {
+        showMessage({
+          message: `蓝图 "${tab.name}" 已保存`,
+          type: 'success',
+          duration: 2000
+        })
+      }
+    } catch (error) {
+      if (showMessage && typeof showMessage === 'function') {
+        showMessage({
+          message: '保存蓝图失败',
+          type: 'error',
+          duration: 3000
+        })
+      }
+    }
+  }
+
+  // 从文件加载蓝图
+  const loadBlueprint = async () => {
+    try {
+      const data = await BlueprintSerializer.loadBlueprintFromFile()
+      
+      if (data) {
+        // 创建新的标签页
+        const tab = blueprintStore.createTab(data.name)
+        tab.blueprint = { ...data.blueprint }
+        
+        // 合并节点定义
+        data.nodeDefinitions.forEach(def => {
+          if (!blueprintStore.nodeDefinitions.find(d => d.id === def.id)) {
+            blueprintStore.addNodeDefinition(def)
+          }
+        })
+        
+        if (showMessage && typeof showMessage === 'function') {
+          showMessage({
+            message: `蓝图 "${data.name}" 加载成功`,
+            type: 'success',
+            duration: 2000
+          })
+        }
+      }
+    } catch (error) {
+      if (showMessage && typeof showMessage === 'function') {
+        showMessage({
+          message: '加载蓝图失败，请检查文件格式',
+          type: 'error',
+          duration: 3000
+        })
+      }
+    }
+  }
+
+  // 导出TypeScript代码
+  const exportTypeScript = () => {
+    const tab = activeTab.value
+    if (!tab) {
+      if (showMessage && typeof showMessage === 'function') {
+        showMessage({
+          message: '没有可导出的蓝图',
+          type: 'warning',
+          duration: 2000
+        })
+      }
+      return
+    }
+
+    try {
+      const generator = new TypeScriptCodeGenerator(
+        tab.blueprint,
+        blueprintStore.nodeDefinitions
+      )
+      
+      generator.downloadCode(`${tab.name}.ts`)
+      
+      if (showMessage && typeof showMessage === 'function') {
+        showMessage({
+          message: `蓝图 "${tab.name}" 的TypeScript代码已导出`,
+          type: 'success',
+          duration: 2000
+        })
+      }
+    } catch (error) {
+      if (showMessage && typeof showMessage === 'function') {
+        showMessage({
+          message: '导出TypeScript代码失败',
+          type: 'error',
+          duration: 3000
+        })
+      }
+    }
+  }
+
   // 返回的方法对象
   const methods: TabMethods = {
     createNewBlueprint,
@@ -203,6 +326,7 @@ export const useBlueprintTabs = () => {
     // 响应式数据
     tabs,
     activeTabId,
+    activeTab,
     showCreateDialog,
     createForm,
     createFormData,
@@ -214,6 +338,11 @@ export const useBlueprintTabs = () => {
     confirmCreate,
     cancelCreate,
     closeTab,
-    methods
+    methods,
+    
+    // 新的序列化方法
+    saveBlueprint,
+    loadBlueprint,
+    exportTypeScript
   }
 } 

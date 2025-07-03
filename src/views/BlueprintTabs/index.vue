@@ -24,6 +24,24 @@
           </el-button>
         </div>
       </div>
+      
+      <!-- 工具栏按钮 -->
+      <div class="tabs-toolbar" v-if="tabs.length > 0">
+        <el-button-group size="small">
+          <el-button @click="saveBlueprint" :disabled="!activeTab">
+            <el-icon><Download /></el-icon>
+            保存
+          </el-button>
+          <el-button @click="loadBlueprint">
+            <el-icon><Upload /></el-icon>
+            加载
+          </el-button>
+          <el-button @click="exportTypeScript" :disabled="!activeTab">
+            <el-icon><Promotion /></el-icon>
+            导出TS
+          </el-button>
+        </el-button-group>
+      </div>
     </div>
 
     <!-- 标签页内容 -->
@@ -97,7 +115,7 @@
 </template>
 
 <script setup lang="ts">
-import { Close, Document } from '@element-plus/icons-vue'
+import { Close, Document, Download, Upload, Promotion } from '@element-plus/icons-vue'
 import BlueprintEditor from '../BlueprintEditor/index.vue'
 import { useBlueprintTabs } from './logic'
 
@@ -105,6 +123,7 @@ const {
   // 响应式数据
   tabs,
   activeTabId,
+  activeTab,
   showCreateDialog,
   createForm,
   createFormData,
@@ -116,7 +135,12 @@ const {
   confirmCreate,
   cancelCreate,
   closeTab,
-  methods
+  methods,
+  
+  // 新的序列化方法
+  saveBlueprint,
+  loadBlueprint,
+  exportTypeScript
 } = useBlueprintTabs()
 
 // 暴露方法供父组件调用
