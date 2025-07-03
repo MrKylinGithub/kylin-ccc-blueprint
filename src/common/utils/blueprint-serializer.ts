@@ -84,19 +84,21 @@ export class BlueprintSerializer {
     blueprint: Blueprint,
     nodeDefinitions: NodeDefinition[],
     filename?: string
-  ) {
+  ): string {
     const json = this.serialize(blueprint, nodeDefinitions)
     const blob = new Blob([json], { type: 'application/json' })
     const url = URL.createObjectURL(blob)
     
     const link = document.createElement('a')
     link.href = url
-    link.download = filename || `${blueprint.name || 'blueprint'}.json`
+    const fileName = filename || `${blueprint.name || 'blueprint'}.json`
+    link.download = fileName
     document.body.appendChild(link)
     link.click()
     document.body.removeChild(link)
     
     URL.revokeObjectURL(url)
+    return fileName
   }
 
   /**
@@ -457,18 +459,20 @@ export class TypeScriptCodeGenerator {
   /**
    * 下载生成的TypeScript代码
    */
-  downloadCode(filename?: string): void {
+  downloadCode(filename?: string): string {
     const code = this.generateCode()
     const blob = new Blob([code], { type: 'text/typescript' })
     const url = URL.createObjectURL(blob)
     
     const link = document.createElement('a')
     link.href = url
-    link.download = filename || `${this.blueprint.name || 'blueprint'}.ts`
+    const fileName = filename || `${this.blueprint.name || 'blueprint'}.ts`
+    link.download = fileName
     document.body.appendChild(link)
     link.click()
     document.body.removeChild(link)
     
     URL.revokeObjectURL(url)
+    return fileName
   }
 } 

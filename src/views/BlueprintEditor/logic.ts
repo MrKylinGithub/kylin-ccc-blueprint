@@ -28,6 +28,14 @@ export const useBlueprintEditor = (props: Props) => {
   // 强制连接线更新的触发器
   const connectionUpdateTrigger = ref(0)
 
+  // 画布平移相关状态
+  const canvasTransform = ref({ x: 0, y: 0, scale: 1 })
+  const isPanning = ref(false)
+  const lastTouchDistance = ref(0)
+  const lastTouchCenter = ref({ x: 0, y: 0 })
+  const initialPinchDistance = ref(0)
+  const initialScale = ref(1)
+
   // 计算属性
   const blueprint = computed(() => props.blueprint)
   const nodes = computed(() => blueprint.value?.nodes || [])
@@ -123,6 +131,85 @@ export const useBlueprintEditor = (props: Props) => {
 
   const onCanvasContextMenu = (event: MouseEvent) => {
     event.preventDefault()
+  }
+
+  // 双击重置画布位置
+  const onCanvasDoubleClick = (event: MouseEvent) => {
+    if (event.target === canvasRef.value) {
+      canvasTransform.value = { x: 0, y: 0, scale: 1 }
+    }
+  }
+
+  // 触摸事件处理
+  const onTouchStart = (event: TouchEvent) => {
+    if (event.touches.length === 2) {
+      // 双指操作开始
+      event.preventDefault()
+      isPanning.value = true
+      
+      const touch1 = event.touches[0]
+      const touch2 = event.touches[1]
+      
+      // 计算双指中心点
+      const centerX = (touch1.clientX + touch2.clientX) / 2
+      const centerY = (touch1.clientY + touch2.clientY) / 2
+      lastTouchCenter.value = { x: centerX, y: centerY }
+      
+      // 计算双指距离（用于缩放）
+      const distance = Math.sqrt(
+        Math.pow(touch2.clientX - touch1.clientX, 2) + 
+        Math.pow(touch2.clientY - touch1.clientY, 2)
+      )
+      lastTouchDistance.value = distance
+      initialPinchDistance.value = distance
+      initialScale.value = canvasTransform.value.scale
+    }
+  }
+
+  const onTouchMove = (event: TouchEvent) => {
+    if (event.touches.length === 2 && isPanning.value) {
+      event.preventDefault()
+      
+      const touch1 = event.touches[0]
+      const touch2 = event.touches[1]
+      
+      // 计算新的双指中心点
+      const centerX = (touch1.clientX + touch2.clientX) / 2
+      const centerY = (touch1.clientY + touch2.clientY) / 2
+      
+      // 计算平移距离
+      const deltaX = centerX - lastTouchCenter.value.x
+      const deltaY = centerY - lastTouchCenter.value.y
+      
+      // 更新画布位置
+      canvasTransform.value.x += deltaX
+      canvasTransform.value.y += deltaY
+      
+      // 计算新的双指距离（用于缩放）
+      const distance = Math.sqrt(
+        Math.pow(touch2.clientX - touch1.clientX, 2) + 
+        Math.pow(touch2.clientY - touch1.clientY, 2)
+      )
+      
+      // 计算缩放比例
+      if (initialPinchDistance.value > 0) {
+        const scaleRatio = distance / initialPinchDistance.value
+        const newScale = Math.max(0.5, Math.min(3, initialScale.value * scaleRatio))
+        canvasTransform.value.scale = newScale
+      }
+      
+      // 更新记录的中心点和距离
+      lastTouchCenter.value = { x: centerX, y: centerY }
+      lastTouchDistance.value = distance
+    }
+  }
+
+  const onTouchEnd = (event: TouchEvent) => {
+    if (event.touches.length < 2) {
+      isPanning.value = false
+      lastTouchDistance.value = 0
+      initialPinchDistance.value = 0
+    }
   }
 
   // 节点操作
@@ -382,6 +469,7 @@ export const useBlueprintEditor = (props: Props) => {
     isConnecting,
     connectionStart,
     tempConnection,
+    canvasTransform,
     
     // 计算属性
     blueprint,
@@ -399,6 +487,10 @@ export const useBlueprintEditor = (props: Props) => {
     onCanvasMouseMove,
     onCanvasMouseUp,
     onCanvasContextMenu,
+    onCanvasDoubleClick,
+    onTouchStart,
+    onTouchMove,
+    onTouchEnd,
     deleteNode,
     moveNode,
     selectNode,

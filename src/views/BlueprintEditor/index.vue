@@ -18,27 +18,38 @@
       @mousemove="onCanvasMouseMove"
       @mouseup="onCanvasMouseUp"
       @contextmenu="onCanvasContextMenu"
+      @dblclick="onCanvasDoubleClick"
+      @touchstart="onTouchStart"
+      @touchmove="onTouchMove"
+      @touchend="onTouchEnd"
     >
       <!-- 背景网格 -->
       <div class="canvas-grid"></div>
 
-      <!-- 节点 -->
-      <BlueprintNode
-        v-for="node in nodes"
-        :key="node.id"
-        :node="node"
-        :is-selected="selectedNodeId === node.id"
-        :connected-ports="getNodeConnections(node.id)"
-        @delete="deleteNode(node.id)"
-        @move="moveNode(node.id, $event)"
-        @select="selectNode(node.id)"
-        @port-mouse-down="onPortMouseDown"
-        @port-mouse-up="onPortMouseUp"
-        @input-change="onNodeInputChange"
-      />
+      <!-- 可变换的画布内容容器 -->
+      <div 
+        class="canvas-content" 
+        :style="{
+          transform: `translate(${canvasTransform.x}px, ${canvasTransform.y}px) scale(${canvasTransform.scale})`
+        }"
+      >
+        <!-- 节点 -->
+        <BlueprintNode
+          v-for="node in nodes"
+          :key="node.id"
+          :node="node"
+          :is-selected="selectedNodeId === node.id"
+          :connected-ports="getNodeConnections(node.id)"
+          @delete="deleteNode(node.id)"
+          @move="moveNode(node.id, $event)"
+          @select="selectNode(node.id)"
+          @port-mouse-down="onPortMouseDown"
+          @port-mouse-up="onPortMouseUp"
+          @input-change="onNodeInputChange"
+        />
 
-      <!-- 连接线 -->
-      <svg class="connections-svg" :style="{ width: '100%', height: '100%' }">
+        <!-- 连接线 -->
+        <svg class="connections-svg" :style="{ width: '100%', height: '100%' }">
         <!-- SVG 标记定义 -->
         <defs>
           <marker
@@ -100,6 +111,7 @@
           marker-end="url(#arrowhead-temp)"
         />
       </svg>
+      </div>
     </div>
   </div>
 </template>
@@ -116,6 +128,7 @@ const {
   canvasRef,
   selectedNodeId,
   tempConnection,
+  canvasTransform,
   
   // 计算属性
   nodes,
@@ -131,6 +144,10 @@ const {
   onCanvasMouseMove,
   onCanvasMouseUp,
   onCanvasContextMenu,
+  onCanvasDoubleClick,
+  onTouchStart,
+  onTouchMove,
+  onTouchEnd,
   deleteNode,
   moveNode,
   selectNode,

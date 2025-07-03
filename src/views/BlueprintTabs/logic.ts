@@ -212,7 +212,7 @@ export const useBlueprintTabs = () => {
     }
 
     try {
-      BlueprintSerializer.downloadBlueprint(
+      const fileName = BlueprintSerializer.downloadBlueprint(
         tab.blueprint,
         blueprintStore.nodeDefinitions,
         `${tab.name}.json`
@@ -222,9 +222,9 @@ export const useBlueprintTabs = () => {
       
       if (showMessage && typeof showMessage === 'function') {
         showMessage({
-          message: `蓝图 "${tab.name}" 已保存`,
+          message: `蓝图 "${tab.name}" 已保存到下载文件夹：${fileName}`,
           type: 'success',
-          duration: 2000
+          duration: 3000
         })
       }
     } catch (error) {
@@ -294,13 +294,13 @@ export const useBlueprintTabs = () => {
         blueprintStore.nodeDefinitions
       )
       
-      generator.downloadCode(`${tab.name}.ts`)
+      const fileName = generator.downloadCode(`${tab.name}.ts`)
       
       if (showMessage && typeof showMessage === 'function') {
         showMessage({
-          message: `蓝图 "${tab.name}" 的TypeScript代码已导出`,
+          message: `蓝图 "${tab.name}" 的TypeScript代码已导出到下载文件夹：${fileName}`,
           type: 'success',
-          duration: 2000
+          duration: 3000
         })
       }
     } catch (error) {
@@ -317,9 +317,9 @@ export const useBlueprintTabs = () => {
   // 返回的方法对象
   const methods: TabMethods = {
     createNewBlueprint,
-    saveCurrentBlueprint,
-    exportCurrentBlueprint,
-    importBlueprint
+    saveCurrentBlueprint: saveBlueprint,
+    exportCurrentBlueprint: exportTypeScript,
+    importBlueprint: loadBlueprint
   }
 
   return {
