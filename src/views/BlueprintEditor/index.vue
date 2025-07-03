@@ -50,69 +50,69 @@
           @input-change="onNodeInputChange"
         />
 
-        <!-- 连接线 -->
-        <svg class="connections-svg" :style="{ width: '100%', height: '100%' }">
-        <!-- SVG 标记定义 -->
-        <defs>
-          <marker
-            id="arrowhead"
-            markerWidth="10"
-            markerHeight="10" 
-            refX="9"
-            refY="3"
-            orient="auto"
-            markerUnits="userSpaceOnUse"
-            viewBox="0 0 10 6"
-          >
+                <!-- 连接线 -->
+        <svg class="connections-svg" :style="{ width: '10000px', height: '10000px', position: 'absolute', top: '-5000px', left: '-5000px' }">
+          <!-- SVG 标记定义 -->
+          <defs>
+            <marker
+              id="arrowhead"
+              markerWidth="10"
+              markerHeight="10" 
+              refX="9"
+              refY="3"
+              orient="auto"
+              markerUnits="userSpaceOnUse"
+              viewBox="0 0 10 6"
+            >
+              <path
+                d="M 0 0 L 0 6 L 9 3 z"
+                fill="#cccccc"
+              />
+            </marker>
+            <!-- 临时连接的箭头（蓝色） -->
+            <marker
+              id="arrowhead-temp"
+              markerWidth="10"
+              markerHeight="10" 
+              refX="9"
+              refY="3"
+              orient="auto"
+              markerUnits="userSpaceOnUse"
+              viewBox="0 0 10 6"
+            >
+              <path
+                d="M 0 0 L 0 6 L 9 3 z"
+                fill="#409eff"
+              />
+            </marker>
+          </defs>
+          
+          <!-- 现有连接 -->
+          <g v-for="connection in connections" :key="connection.id">
+            <!-- 连接线路径，使用 marker-end 自动添加箭头 -->
             <path
-              d="M 0 0 L 0 6 L 9 3 z"
-              fill="#cccccc"
+              :d="getConnectionPath(connection)"
+              stroke="#cccccc"
+              stroke-width="2"
+              fill="none"
+              class="connection-path"
+              marker-end="url(#arrowhead)"
+              @click="selectConnection(connection.id)"
             />
-          </marker>
-          <!-- 临时连接的箭头（蓝色） -->
-          <marker
-            id="arrowhead-temp"
-            markerWidth="10"
-            markerHeight="10" 
-            refX="9"
-            refY="3"
-            orient="auto"
-            markerUnits="userSpaceOnUse"
-            viewBox="0 0 10 6"
-          >
-            <path
-              d="M 0 0 L 0 6 L 9 3 z"
-              fill="#409eff"
-            />
-          </marker>
-        </defs>
-        
-        <!-- 现有连接 -->
-        <g v-for="connection in connections" :key="connection.id">
-          <!-- 连接线路径，使用 marker-end 自动添加箭头 -->
+          </g>
+          
+          <!-- 正在创建的连接 -->
           <path
-            :d="getConnectionPath(connection)"
-            stroke="#cccccc"
+            v-if="tempConnection"
+            :d="tempConnection.path"
+            stroke="#409eff"
             stroke-width="2"
             fill="none"
-            class="connection-path"
-            marker-end="url(#arrowhead)"
-            @click="selectConnection(connection.id)"
+            stroke-dasharray="5,5"
+            class="temp-connection"
+            marker-end="url(#arrowhead-temp)"
           />
-        </g>
-        
-        <!-- 正在创建的连接 -->
-        <path
-          v-if="tempConnection"
-          :d="tempConnection.path"
-          stroke="#409eff"
-          stroke-width="2"
-          fill="none"
-          stroke-dasharray="5,5"
-          class="temp-connection"
-          marker-end="url(#arrowhead-temp)"
-        />
-      </svg>
+        </svg>
       </div>
     </div>
   </div>

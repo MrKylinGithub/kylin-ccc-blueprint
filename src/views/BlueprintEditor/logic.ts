@@ -137,13 +137,25 @@ export const useBlueprintEditor = (props: Props) => {
   const onCanvasMouseMove = (event: MouseEvent) => {
     if (isConnecting.value && connectionStart.value && canvasRef.value) {
       const canvasRect = canvasRef.value.getBoundingClientRect()
-      const currentPos = {
-        x: event.clientX - canvasRect.left,
-        y: event.clientY - canvasRect.top
+      
+      // 计算鼠标在画布内容中的位置，需要考虑画布变换
+      const mouseInCanvas = {
+        x: (event.clientX - canvasRect.left - canvasTransform.value.x) / canvasTransform.value.scale,
+        y: (event.clientY - canvasRect.top - canvasTransform.value.y) / canvasTransform.value.scale
+      }
+      
+      // 调整起始位置和当前位置到SVG坐标系
+      const adjustedStartPos = { 
+        x: connectionStart.value.position.x + 5000, 
+        y: connectionStart.value.position.y + 5000 
+      }
+      const adjustedCurrentPos = { 
+        x: mouseInCanvas.x + 5000, 
+        y: mouseInCanvas.y + 5000 
       }
       
       tempConnection.value = {
-        path: createBezierPath(connectionStart.value.position, currentPos)
+        path: createBezierPath(adjustedStartPos, adjustedCurrentPos)
       }
     }
     
@@ -481,7 +493,11 @@ export const useBlueprintEditor = (props: Props) => {
     
     if (!fromPos || !toPos) return ''
     
-    return createBezierPath(fromPos, toPos)
+    // 由于SVG坐标系从(-5000, -5000)开始，需要加上偏移量
+    const adjustedFromPos = { x: fromPos.x + 5000, y: fromPos.y + 5000 }
+    const adjustedToPos = { x: toPos.x + 5000, y: toPos.y + 5000 }
+    
+    return createBezierPath(adjustedFromPos, adjustedToPos)
   }
 
   // 创建贝塞尔曲线路径
