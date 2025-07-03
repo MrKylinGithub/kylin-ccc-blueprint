@@ -1,0 +1,119 @@
+@use './variables.scss' as *;
+@use './mixins.scss' as *;
+
+// ============ 全局重置 ============
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html, body {
+  height: 100%;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+    sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  background: $bg-primary;
+  color: $text-primary;
+  overflow: hidden;
+}
+
+#app {
+  height: 100%;
+  width: 100%;
+}
+
+// ============ 通用样式类 ============
+.flex-center {
+  @include flex-center;
+}
+
+.flex-between {
+  @include flex-between;
+}
+
+.flex-start {
+  @include flex-start;
+}
+
+.flex-column {
+  @include flex-column;
+}
+
+.text-ellipsis {
+  @include text-ellipsis;
+}
+
+.scrollbar {
+  @include scrollbar;
+}
+
+// ============ 工具类 ============
+.ml-auto {
+  margin-left: auto;
+}
+
+.mr-auto {
+  margin-right: auto;
+}
+
+.w-full {
+  width: 100%;
+}
+
+.h-full {
+  height: 100%;
+}
+
+.pointer {
+  cursor: pointer;
+}
+
+.no-select {
+  user-select: none;
+}
+
+// ============ 响应式隐藏 ============
+@include mobile {
+  .hide-mobile {
+    display: none !important;
+  }
+}
+
+@include tablet {
+  .hide-tablet {
+    display: none !important;
+  }
+}
+
+@include desktop {
+  .hide-desktop {
+    display: none !important;
+  }
+}
+
+// ============ 动画类 ============
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity $transition-normal;
+}
+
+.fade-enter-from,
+.fade-leave-to {
+  opacity: 0;
+}
+
+.slide-enter-active,
+.slide-leave-active {
+  transition: transform $transition-normal;
+}
+
+.slide-enter-from {
+  transform: translateX(-100%);
+}
+
+.slide-leave-to {
+  transform: translateX(100%);
+} 

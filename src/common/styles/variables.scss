@@ -1,0 +1,94 @@
+// ============ 颜色变量 ============
+// 主色调
+$primary-color: #409eff;
+$success-color: #4CAF50;
+$warning-color: #FF9800;
+$danger-color: #F44336;
+$info-color: #2196F3;
+
+// 简化命名（与组件一致）
+$color-primary: #409eff;
+$color-success: #4CAF50;
+$color-warning: #FF9800;
+$color-danger: #F44336;
+$color-info: #2196F3;
+
+// 中性色
+$white: #ffffff;
+$black: #000000;
+$text-primary: #cccccc;
+$text-secondary: #999999;
+$text-disabled: #666666;
+
+// 文本颜色（与组件一致）
+$color-text-primary: #cccccc;
+$color-text-secondary: #999999;
+$color-text-light: #999999;
+$color-text-disabled: #666666;
+
+// 背景色
+$bg-primary: #2b2b2b;
+$bg-secondary: #3a3a3a;
+$bg-tertiary: #4a4a4a;
+$bg-hover: #525252;
+
+// 背景颜色（与组件一致）
+$color-bg-primary: #2b2b2b;
+$color-bg-secondary: #3a3a3a;
+$color-bg-dark: #2b2b2b;
+$color-bg-light: #4a4a4a;
+
+// 边框色
+$border-primary: #555555;
+$border-secondary: #666666;
+$border-active: #409eff;
+
+// 边框颜色（与组件一致）
+$color-border: #555555;
+$color-border-light: #666666;
+$color-border-active: #409eff;
+
+// 节点分类颜色
+$node-constant: #3F51B5;
+$node-event: #4CAF50;
+$node-control: #FF5722;
+$node-math: #2196F3;
+$node-string: #9C27B0;
+
+// ============ 尺寸变量 ============
+// 间距
+$spacing-xs: 4px;
+$spacing-sm: 8px;
+$spacing-md: 12px;
+$spacing-lg: 16px;
+$spacing-xl: 24px;
+$spacing-xxl: 32px;
+
+// 圆角
+$border-radius-sm: 4px;
+$border-radius-md: 6px;
+$border-radius-lg: 8px;
+
+// 高度
+$toolbar-height: 48px;
+$tab-height: 40px;
+$node-min-height: 80px;
+$panel-min-width: 200px;
+
+// ============ 动画变量 ============
+$transition-fast: 0.15s;
+$transition-normal: 0.25s;
+$transition-slow: 0.35s;
+
+// ============ 阴影变量 ============
+$shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.2);
+$shadow-md: 0 2px 8px rgba(0, 0, 0, 0.3);
+$shadow-lg: 0 4px 16px rgba(0, 0, 0, 0.4);
+
+// ============ Z-index 层级 ============
+$z-canvas-grid: 1;
+$z-node: 10;
+$z-connection: 20;
+$z-toolbar: 100;
+$z-dialog: 1000;
+$z-tooltip: 1100; 

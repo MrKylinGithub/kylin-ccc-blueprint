@@ -1,0 +1,228 @@
+@use 'sass:color';
+@use '../../common/styles/variables' as *;
+@use '../../common/styles/mixins' as *;
+
+.node-manager {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  background: $color-bg-secondary;
+  overflow: hidden;
+}
+
+.node-manager-header {
+  padding: 12px 16px;
+  border-bottom: 1px solid $color-border;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: $color-bg-secondary;
+
+  h3 {
+    margin: 0;
+    color: $color-text-primary;
+    font-size: 16px;
+    font-weight: 500;
+  }
+}
+
+.node-categories {
+  flex: 1;
+  padding: 16px;
+  overflow-y: auto;
+  @include scrollbar;
+}
+
+.category-section {
+  margin-bottom: 24px;
+
+  &:last-child {
+    margin-bottom: 0;
+  }
+}
+
+.category-title {
+  margin: 0 0 12px 0;
+  color: $color-text-primary;
+  font-size: 14px;
+  font-weight: 500;
+  padding-bottom: 8px;
+  border-bottom: 1px solid $color-border;
+}
+
+.node-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.node-item {
+  display: flex;
+  align-items: center;
+  padding: 12px;
+  background: $color-bg-dark;
+  border: 1px solid $color-border;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  user-select: none;
+
+  &:hover {
+    background: color.adjust($color-bg-dark, $lightness: 5%);
+    border-color: $color-primary;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  }
+
+  &:active {
+    transform: translateY(0);
+  }
+}
+
+.node-color {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  margin-right: 12px;
+  flex-shrink: 0;
+  border: 2px solid rgba(255, 255, 255, 0.2);
+}
+
+.node-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.node-name {
+  font-size: 13px;
+  font-weight: 500;
+  color: $color-text-primary;
+  margin-bottom: 4px;
+}
+
+.node-description {
+  font-size: 11px;
+  color: $color-text-light;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+// 创建/编辑节点对话框样式
+.param-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.param-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px;
+  background: $color-bg-dark;
+  border: 1px solid $color-border;
+  border-radius: 6px;
+
+  .el-input {
+    min-width: 100px;
+  }
+
+  .el-select {
+    min-width: 100px;
+  }
+}
+
+// 拖拽预览容器
+.drag-preview-container {
+  position: absolute;
+  top: -2000px; // 移出可视区域
+  left: -2000px;
+  opacity: 0; // 使用透明度而不是visibility hidden
+  pointer-events: none;
+  z-index: -1; // 确保在最底层
+}
+
+// 对话框样式重写
+:deep(.el-dialog) {
+  background-color: $color-bg-secondary;
+  border: 1px solid $color-border;
+}
+
+:deep(.el-dialog__header) {
+  background-color: #4a4a4a;
+  border-bottom: 1px solid $color-border;
+  padding: 16px 20px;
+}
+
+:deep(.el-dialog__title) {
+  color: $color-text-primary;
+}
+
+:deep(.el-dialog__body) {
+  padding: 20px;
+  max-height: 70vh;
+  overflow-y: auto;
+  @include scrollbar;
+}
+
+:deep(.el-form-item__label) {
+  color: $color-text-light;
+}
+
+// 响应式适配
+@media (max-width: 1200px) {
+  .node-manager-header {
+    padding: 10px 12px;
+
+    h3 {
+      font-size: 15px;
+    }
+  }
+
+  .node-categories {
+    padding: 12px;
+  }
+
+  .node-item {
+    padding: 10px;
+  }
+
+  .node-name {
+    font-size: 12px;
+  }
+
+  .node-description {
+    font-size: 10px;
+  }
+}
+
+@media (max-width: 900px) {
+  .param-item {
+    flex-direction: column;
+    align-items: stretch;
+
+    .el-input,
+    .el-select {
+      min-width: auto;
+    }
+  }
+}
+
+@media (max-width: 600px) {
+  .node-manager-header {
+    flex-direction: column;
+    gap: 8px;
+    padding: 8px;
+  }
+
+  .node-item {
+    padding: 8px;
+  }
+
+  .node-color {
+    width: 10px;
+    height: 10px;
+    margin-right: 8px;
+  }
+} 

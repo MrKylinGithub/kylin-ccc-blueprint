@@ -1,0 +1,195 @@
+@use 'sass:color';
+@use './variables.scss' as *;
+
+// ============ 布局混入 ============
+@mixin flex-center {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+@mixin flex-between {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+@mixin flex-start {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+}
+
+@mixin flex-column {
+  display: flex;
+  flex-direction: column;
+}
+
+@mixin absolute-full {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+}
+
+// ============ 文本混入 ============
+@mixin text-ellipsis {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+@mixin text-break {
+  word-wrap: break-word;
+  word-break: break-all;
+}
+
+// ============ 按钮混入 ============
+@mixin button-base {
+  display: inline-flex;
+  align-items: center;
+  gap: $spacing-sm;
+  padding: $spacing-sm $spacing-md;
+  border: none;
+  border-radius: $border-radius-md;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all $transition-normal;
+  user-select: none;
+  
+  &:hover {
+    transform: translateY(-1px);
+  }
+  
+  &:active {
+    transform: translateY(0);
+  }
+  
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none;
+  }
+}
+
+@mixin button-primary {
+  @include button-base;
+  background: $primary-color;
+  color: $white;
+  
+  &:hover {
+    background: color.adjust($primary-color, $lightness: 10%);
+  }
+}
+
+@mixin button-secondary {
+  @include button-base;
+  background: $bg-tertiary;
+  color: $text-primary;
+  border: 1px solid $border-primary;
+  
+  &:hover {
+    background: $bg-hover;
+    border-color: $border-secondary;
+  }
+}
+
+// ============ 节点混入 ============
+@mixin node-base {
+  position: absolute;
+  background: $bg-tertiary;
+  border: 2px solid $border-primary;
+  border-radius: $border-radius-lg;
+  min-width: 180px;
+  max-width: 400px;
+  box-shadow: $shadow-md;
+  cursor: move;
+  user-select: none;
+  z-index: $z-node;
+  color: $text-primary;
+  
+  &.selected {
+    border-color: $border-active;
+    box-shadow: $shadow-lg;
+  }
+  
+  &:hover {
+    border-color: $border-secondary;
+  }
+}
+
+@mixin node-header($color: $bg-secondary) {
+  background: $color;
+  padding: $spacing-sm $spacing-md;
+  border-radius: $border-radius-md $border-radius-md 0 0;
+  @include flex-between;
+  font-weight: 500;
+  color: $white;
+}
+
+@mixin port-base {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  border: 2px solid $border-primary;
+  background: $bg-primary;
+  cursor: pointer;
+  transition: all $transition-fast;
+  
+  &:hover {
+    transform: scale(1.2);
+    border-color: $border-active;
+  }
+  
+  &.connected {
+    background: $primary-color;
+    border-color: $primary-color;
+  }
+  
+  &.exec-port {
+    border-radius: 2px;
+    background: $success-color;
+    border-color: $success-color;
+  }
+}
+
+// ============ 滚动条混入 ============
+@mixin scrollbar {
+  &::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  
+  &::-webkit-scrollbar-track {
+    background: $bg-secondary;
+  }
+  
+  &::-webkit-scrollbar-thumb {
+    background: $border-primary;
+    border-radius: 3px;
+    
+    &:hover {
+      background: $border-secondary;
+    }
+  }
+}
+
+// ============ 响应式混入 ============
+@mixin mobile {
+  @media (max-width: 768px) {
+    @content;
+  }
+}
+
+@mixin tablet {
+  @media (min-width: 769px) and (max-width: 1024px) {
+    @content;
+  }
+}
+
+@mixin desktop {
+  @media (min-width: 1025px) {
+    @content;
+  }
+} 

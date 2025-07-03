@@ -1,0 +1,109 @@
+@use '../../common/styles/variables' as *;
+@use '../../common/styles/mixins' as *;
+
+.blueprint-editor {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  background: $color-bg-dark;
+}
+
+.editor-info {
+  padding: 4px 16px;
+  background: $color-bg-secondary;
+  border-bottom: 1px solid $color-border;
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  min-height: 28px;
+}
+
+.info-content {
+  display: flex;
+  gap: 16px;
+  font-size: 12px;
+  color: $color-text-light;
+}
+
+.editor-canvas {
+  flex: 1;
+  position: relative;
+  overflow: hidden;
+  background: $color-bg-dark;
+  min-height: 200px;
+}
+
+.canvas-grid {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-image: 
+    linear-gradient(to right, $color-border 1px, transparent 1px),
+    linear-gradient(to bottom, $color-border 1px, transparent 1px);
+  background-size: 20px 20px;
+  pointer-events: none;
+}
+
+.connections-svg {
+  position: absolute;
+  top: 0;
+  left: 0;
+  pointer-events: none;
+  z-index: 20; /* 连接线显示在节点上方 */
+}
+
+.connection-path {
+  pointer-events: stroke;
+  cursor: pointer;
+  transition: stroke-width 0.2s;
+  stroke: $color-text-light;
+}
+
+.connection-path:hover {
+  stroke: $color-primary;
+  stroke-width: 3px;
+}
+
+.temp-connection {
+  pointer-events: none;
+}
+
+/* 节点在连接线下方 */
+:deep(.blueprint-node) {
+  z-index: 10;
+}
+
+/* 响应式适配 */
+@media (max-width: 1200px) {
+  .editor-info {
+    padding: 4px 12px;
+  }
+  
+  .info-content {
+    font-size: 11px;
+    gap: 12px;
+  }
+}
+
+@media (max-width: 900px) {
+  .editor-info {
+    justify-content: center;
+    padding: 4px 8px;
+  }
+  
+  .info-content {
+    font-size: 10px;
+    gap: 8px;
+  }
+}
+
+@media (max-width: 600px) {
+  .info-content span {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+} 

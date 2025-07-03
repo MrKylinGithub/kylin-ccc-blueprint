@@ -1,0 +1,56 @@
+// 节点参数类型
+export interface NodeParam {
+  id: string;
+  name: string;
+  type: 'string' | 'number' | 'boolean' | 'object' | 'exec'; // exec 表示执行流
+  defaultValue?: any;
+  description?: string;
+}
+
+// 自定义节点定义
+export interface NodeDefinition {
+  id: string;
+  name: string;
+  category: string;
+  description?: string;
+  inputs: NodeParam[];
+  outputs: NodeParam[];
+  color?: string;
+}
+
+// 蓝图中的节点实例
+export interface NodeInstance {
+  id: string;
+  definitionId: string;
+  name: string;
+  position: { x: number; y: number };
+  inputs: { [paramId: string]: any };
+  outputs: { [paramId: string]: any };
+}
+
+// 节点连接
+export interface NodeConnection {
+  id: string;
+  fromNodeId: string;
+  fromParamId: string;
+  toNodeId: string;
+  toParamId: string;
+}
+
+// 蓝图数据
+export interface Blueprint {
+  id: string;
+  name: string;
+  nodes: NodeInstance[];
+  connections: NodeConnection[];
+  variables: { [name: string]: any };
+  description?: string;
+}
+
+// 蓝图标签页
+export interface BlueprintTab {
+  id: string;
+  name: string;
+  blueprint: Blueprint;
+  isDirty: boolean;
+} 

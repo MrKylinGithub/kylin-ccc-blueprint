@@ -1,0 +1,102 @@
+@use 'sass:color';
+@use '../../../common/styles/variables.scss' as *;
+@use '../../../common/styles/mixins.scss' as *;
+
+.base-button {
+  @include button-base;
+  
+  .button-text {
+    margin-left: $spacing-xs;
+  }
+  
+  // 类型样式
+  &--primary {
+    @include button-primary;
+  }
+  
+  &--secondary {
+    @include button-secondary;
+  }
+  
+  &--success {
+    background: $success-color;
+    color: $white;
+    
+    &:hover {
+      background: color.adjust($success-color, $lightness: -10%);
+    }
+  }
+  
+  &--warning {
+    background: $warning-color;
+    color: $white;
+    
+    &:hover {
+      background: color.adjust($warning-color, $lightness: -10%);
+    }
+  }
+  
+  &--danger {
+    background: $danger-color;
+    color: $white;
+    
+    &:hover {
+      background: color.adjust($danger-color, $lightness: -10%);
+    }
+  }
+  
+  &--info {
+    background: $info-color;
+    color: $white;
+    
+    &:hover {
+      background: color.adjust($info-color, $lightness: -10%);
+    }
+  }
+  
+  // 尺寸样式
+  &--small {
+    padding: $spacing-xs $spacing-sm;
+    font-size: 12px;
+    min-height: 28px;
+  }
+  
+  &--medium {
+    padding: $spacing-sm $spacing-md;
+    font-size: 14px;
+    min-height: 32px;
+  }
+  
+  &--large {
+    padding: $spacing-md $spacing-lg;
+    font-size: 16px;
+    min-height: 40px;
+  }
+  
+  // 状态样式
+  &--disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    
+    &:hover {
+      transform: none;
+    }
+  }
+  
+  &--loading {
+    cursor: wait;
+    
+    .rotating {
+      animation: rotating 1s linear infinite;
+    }
+  }
+}
+
+@keyframes rotating {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+} 

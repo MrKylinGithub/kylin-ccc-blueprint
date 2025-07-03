@@ -1,0 +1,156 @@
+@use 'sass:color';
+@use '../../common/styles/variables' as *;
+@use '../../common/styles/mixins' as *;
+
+.blueprint-tabs {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  background: $color-bg-dark;
+}
+
+.tabs-header {
+  background: $color-bg-secondary;
+  border-bottom: 1px solid $color-border;
+  padding: 0;
+}
+
+.tabs-nav {
+  display: flex;
+  align-items: center;
+  height: 40px;
+  overflow-x: auto;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  scroll-behavior: smooth;
+}
+
+.tabs-nav::-webkit-scrollbar {
+  display: none;
+}
+
+.tab-item {
+  display: flex;
+  align-items: center;
+  padding: 8px 12px;
+  background: #4a4a4a;
+  border-right: 1px solid $color-border;
+  cursor: pointer;
+  transition: all 0.2s;
+  white-space: nowrap;
+  min-width: 100px;
+  max-width: 200px;
+  position: relative;
+  flex-shrink: 0;
+}
+
+.tab-item:hover {
+  background: color.adjust($color-bg-secondary, $lightness: 5%);
+}
+
+.tab-item.active {
+  background: $color-bg-secondary;
+  border-bottom: 2px solid $color-primary;
+}
+
+.tab-icon {
+  margin-right: 4px;
+  color: $color-text-light;
+}
+
+.tab-title {
+  flex: 1;
+  font-size: 13px;
+  color: $color-text-primary;
+  margin-right: 6px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-width: 0;
+}
+
+.tab-dirty {
+  color: $color-danger;
+  font-size: 16px;
+  margin-right: 4px;
+}
+
+.tab-close {
+  padding: 0;
+  width: 16px;
+  height: 16px;
+  color: #999;
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+
+.tab-item:hover .tab-close {
+  opacity: 1;
+}
+
+.tab-close:hover {
+  color: $color-danger;
+}
+
+.new-tab-btn {
+  margin-left: 16px;
+  margin-right: 16px;
+  flex-shrink: 0;
+}
+
+.tabs-content {
+  flex: 1;
+  position: relative;
+  overflow: hidden;
+}
+
+.tab-content {
+  height: 100%;
+  width: 100%;
+}
+
+.empty-state {
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: $color-bg-dark;
+}
+
+.empty-content {
+  text-align: center;
+  color: $color-text-light;
+}
+
+.empty-content h3 {
+  margin: 16px 0 8px 0;
+  color: $color-text-primary;
+}
+
+.empty-content p {
+  margin: 0 0 24px 0;
+  color: $color-text-light;
+}
+
+/* 对话框样式调整 */
+:deep(.el-dialog) {
+  background-color: $color-bg-secondary;
+  border: 1px solid $color-border;
+}
+
+:deep(.el-dialog__header) {
+  background-color: #4a4a4a;
+  border-bottom: 1px solid $color-border;
+  padding: 16px 20px;
+}
+
+:deep(.el-dialog__title) {
+  color: $color-text-primary;
+}
+
+:deep(.el-dialog__body) {
+  padding: 20px;
+}
+
+:deep(.el-form-item__label) {
+  color: $color-text-light;
+} 
