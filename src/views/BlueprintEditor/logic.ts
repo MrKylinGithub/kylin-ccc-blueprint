@@ -212,6 +212,43 @@ export const useBlueprintEditor = (props: Props) => {
     }
   }
 
+  // Mac触控板支持 - 滚轮事件处理
+  const onWheel = (event: WheelEvent) => {
+    // 检查是否是触控板的缩放手势 (通常 ctrlKey 为 true)
+    if (event.ctrlKey || event.metaKey) {
+      // 缩放手势
+      event.preventDefault()
+      
+      const rect = canvasRef.value?.getBoundingClientRect()
+      if (!rect) return
+      
+      const mouseX = event.clientX - rect.left
+      const mouseY = event.clientY - rect.top
+      
+      // 计算缩放因子
+      const scaleFactor = event.deltaY > 0 ? 0.9 : 1.1
+      const newScale = Math.max(0.5, Math.min(3, canvasTransform.value.scale * scaleFactor))
+      
+      // 以鼠标位置为中心进行缩放
+      const scaleRatio = newScale / canvasTransform.value.scale
+      canvasTransform.value.x = mouseX - (mouseX - canvasTransform.value.x) * scaleRatio
+      canvasTransform.value.y = mouseY - (mouseY - canvasTransform.value.y) * scaleRatio
+      canvasTransform.value.scale = newScale
+      
+    } else if (event.shiftKey || Math.abs(event.deltaX) > Math.abs(event.deltaY)) {
+      // 水平滚动或按住Shift的垂直滚动
+      event.preventDefault()
+      canvasTransform.value.x -= event.deltaX
+      canvasTransform.value.y -= event.deltaY
+      
+    } else if (Math.abs(event.deltaX) > 0 || Math.abs(event.deltaY) > 0) {
+      // Mac触控板的双指拖动
+      event.preventDefault()
+      canvasTransform.value.x -= event.deltaX
+      canvasTransform.value.y -= event.deltaY
+    }
+  }
+
   // 节点操作
   const deleteNode = (nodeId: string) => {
     blueprintStore.removeNode(nodeId)
@@ -491,6 +528,7 @@ export const useBlueprintEditor = (props: Props) => {
     onTouchStart,
     onTouchMove,
     onTouchEnd,
+    onWheel,
     deleteNode,
     moveNode,
     selectNode,

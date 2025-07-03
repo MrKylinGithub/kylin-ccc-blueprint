@@ -22,6 +22,7 @@
       @touchstart="onTouchStart"
       @touchmove="onTouchMove"
       @touchend="onTouchEnd"
+      @wheel="onWheel"
     >
       <!-- 背景网格 -->
       <div class="canvas-grid"></div>
@@ -148,6 +149,7 @@ const {
   onTouchStart,
   onTouchMove,
   onTouchEnd,
+  onWheel,
   deleteNode,
   moveNode,
   selectNode,
