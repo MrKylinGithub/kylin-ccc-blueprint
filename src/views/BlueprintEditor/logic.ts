@@ -35,6 +35,11 @@ export const useBlueprintEditor = (props: Props) => {
   const lastTouchCenter = ref({ x: 0, y: 0 })
   const initialPinchDistance = ref(0)
   const initialScale = ref(1)
+  
+  // 鼠标拖拽状态
+  const isMouseDragging = ref(false)
+  const lastMousePosition = ref({ x: 0, y: 0 })
+  const dragStartPosition = ref({ x: 0, y: 0 })
 
   // 计算属性
   const blueprint = computed(() => props.blueprint)
@@ -105,6 +110,11 @@ export const useBlueprintEditor = (props: Props) => {
     if (event.target === canvasRef.value) {
       selectedNodeId.value = ''
       selectedConnectionId.value = ''
+      
+      // 开始拖拽画布
+      isMouseDragging.value = true
+      lastMousePosition.value = { x: event.clientX, y: event.clientY }
+      dragStartPosition.value = { x: event.clientX, y: event.clientY }
     }
   }
 
@@ -120,6 +130,17 @@ export const useBlueprintEditor = (props: Props) => {
         path: createBezierPath(connectionStart.value.position, currentPos)
       }
     }
+    
+    // 处理画布拖拽
+    if (isMouseDragging.value) {
+      const deltaX = event.clientX - lastMousePosition.value.x
+      const deltaY = event.clientY - lastMousePosition.value.y
+      
+      canvasTransform.value.x += deltaX
+      canvasTransform.value.y += deltaY
+      
+      lastMousePosition.value = { x: event.clientX, y: event.clientY }
+    }
   }
 
   const onCanvasMouseUp = () => {
@@ -127,6 +148,9 @@ export const useBlueprintEditor = (props: Props) => {
       // 如果没有连接到有效端口，取消连接
       cancelConnection()
     }
+    
+    // 结束画布拖拽
+    isMouseDragging.value = false
   }
 
   const onCanvasContextMenu = (event: MouseEvent) => {
@@ -173,17 +197,15 @@ export const useBlueprintEditor = (props: Props) => {
       const touch1 = event.touches[0]
       const touch2 = event.touches[1]
       
-      // 计算新的双指中心点
+      // 计算双指中心点（用于缩放中心）
       const centerX = (touch1.clientX + touch2.clientX) / 2
       const centerY = (touch1.clientY + touch2.clientY) / 2
       
-      // 计算平移距离
-      const deltaX = centerX - lastTouchCenter.value.x
-      const deltaY = centerY - lastTouchCenter.value.y
+      const rect = canvasRef.value?.getBoundingClientRect()
+      if (!rect) return
       
-      // 更新画布位置
-      canvasTransform.value.x += deltaX
-      canvasTransform.value.y += deltaY
+      const scaleCenterX = centerX - rect.left
+      const scaleCenterY = centerY - rect.top
       
       // 计算新的双指距离（用于缩放）
       const distance = Math.sqrt(
@@ -195,11 +217,14 @@ export const useBlueprintEditor = (props: Props) => {
       if (initialPinchDistance.value > 0) {
         const scaleRatio = distance / initialPinchDistance.value
         const newScale = Math.max(0.5, Math.min(3, initialScale.value * scaleRatio))
+        
+        // 以双指中心为缩放点
+        const scale = newScale / canvasTransform.value.scale
+        canvasTransform.value.x = scaleCenterX - (scaleCenterX - canvasTransform.value.x) * scale
+        canvasTransform.value.y = scaleCenterY - (scaleCenterY - canvasTransform.value.y) * scale
         canvasTransform.value.scale = newScale
       }
       
-      // 更新记录的中心点和距离
-      lastTouchCenter.value = { x: centerX, y: centerY }
       lastTouchDistance.value = distance
     }
   }
@@ -234,19 +259,8 @@ export const useBlueprintEditor = (props: Props) => {
       canvasTransform.value.x = mouseX - (mouseX - canvasTransform.value.x) * scaleRatio
       canvasTransform.value.y = mouseY - (mouseY - canvasTransform.value.y) * scaleRatio
       canvasTransform.value.scale = newScale
-      
-    } else if (event.shiftKey || Math.abs(event.deltaX) > Math.abs(event.deltaY)) {
-      // 水平滚动或按住Shift的垂直滚动
-      event.preventDefault()
-      canvasTransform.value.x -= event.deltaX
-      canvasTransform.value.y -= event.deltaY
-      
-    } else if (Math.abs(event.deltaX) > 0 || Math.abs(event.deltaY) > 0) {
-      // Mac触控板的双指拖动
-      event.preventDefault()
-      canvasTransform.value.x -= event.deltaX
-      canvasTransform.value.y -= event.deltaY
     }
+    // 移除wheel事件的平移功能，改为鼠标拖拽
   }
 
   // 节点操作
@@ -489,13 +503,20 @@ export const useBlueprintEditor = (props: Props) => {
     }
   }
 
-  // 挂载时添加键盘监听
+  // 全局鼠标事件处理
+  const onGlobalMouseUp = () => {
+    isMouseDragging.value = false
+  }
+
+  // 挂载时添加事件监听
   onMounted(() => {
     document.addEventListener('keydown', onKeyDown)
+    document.addEventListener('mouseup', onGlobalMouseUp)
   })
 
   onUnmounted(() => {
     document.removeEventListener('keydown', onKeyDown)
+    document.removeEventListener('mouseup', onGlobalMouseUp)
   })
 
   return {

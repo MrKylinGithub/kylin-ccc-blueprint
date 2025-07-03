@@ -31,6 +31,11 @@
   overflow: hidden;
   background: $color-bg-dark;
   min-height: 200px;
+  cursor: grab;
+  
+  &:active {
+    cursor: grabbing;
+  }
 }
 
 .canvas-grid {
