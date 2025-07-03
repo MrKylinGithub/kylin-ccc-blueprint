@@ -47,6 +47,13 @@ export const useBlueprintEditor = (props: Props) => {
   const connections = computed(() => blueprint.value?.connections || [])
   const nodeCount = computed(() => nodes.value.length)
   const connectionCount = computed(() => connections.value.length)
+  
+  // 画布状态信息
+  const canvasInfo = computed(() => ({
+    x: Math.round(canvasTransform.value.x),
+    y: Math.round(canvasTransform.value.y),
+    scale: Math.round(canvasTransform.value.scale * 100) / 100
+  }))
 
   // 检查端口是否已连接
   const isPortConnected = (nodeId: string, portType: 'input' | 'output', paramId: string): boolean => {
@@ -107,7 +114,13 @@ export const useBlueprintEditor = (props: Props) => {
   }
 
   const onCanvasMouseDown = (event: MouseEvent) => {
-    if (event.target === canvasRef.value) {
+    // 确保只有点击画布本身或背景网格才触发拖拽
+    const target = event.target as HTMLElement
+    const isCanvasElement = target === canvasRef.value || 
+                           target.classList.contains('canvas-grid') ||
+                           target.classList.contains('canvas-content')
+    
+    if (isCanvasElement) {
       selectedNodeId.value = ''
       selectedConnectionId.value = ''
       
@@ -115,6 +128,9 @@ export const useBlueprintEditor = (props: Props) => {
       isMouseDragging.value = true
       lastMousePosition.value = { x: event.clientX, y: event.clientY }
       dragStartPosition.value = { x: event.clientX, y: event.clientY }
+      
+      // 防止默认行为
+      event.preventDefault()
     }
   }
 
@@ -159,7 +175,12 @@ export const useBlueprintEditor = (props: Props) => {
 
   // 双击重置画布位置
   const onCanvasDoubleClick = (event: MouseEvent) => {
-    if (event.target === canvasRef.value) {
+    const target = event.target as HTMLElement
+    const isCanvasElement = target === canvasRef.value || 
+                           target.classList.contains('canvas-grid') ||
+                           target.classList.contains('canvas-content')
+    
+    if (isCanvasElement) {
       canvasTransform.value = { x: 0, y: 0, scale: 1 }
     }
   }
@@ -535,6 +556,7 @@ export const useBlueprintEditor = (props: Props) => {
     connections,
     nodeCount,
     connectionCount,
+    canvasInfo,
     
     // 方法
     isPortConnected,

@@ -38,19 +38,6 @@
   }
 }
 
-.canvas-grid {
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background-image: 
-    linear-gradient(to right, $color-border 1px, transparent 1px),
-    linear-gradient(to bottom, $color-border 1px, transparent 1px);
-  background-size: 20px 20px;
-  pointer-events: none;
-}
-
 .canvas-content {
   position: absolute;
   top: 0;
@@ -59,6 +46,20 @@
   height: 100%;
   transform-origin: 0 0;
   transition: transform 0.1s ease-out;
+}
+
+.canvas-grid {
+  position: absolute;
+  // 创建一个很大的虚拟画布空间
+  top: -5000px;
+  left: -5000px;
+  width: 10000px;
+  height: 10000px;
+  background-image: 
+    linear-gradient(to right, $color-border 1px, transparent 1px),
+    linear-gradient(to bottom, $color-border 1px, transparent 1px);
+  background-size: 20px 20px;
+  pointer-events: none;
 }
 
 .connections-svg {

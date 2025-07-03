@@ -2,10 +2,12 @@
   <div class="blueprint-editor">
     <!-- 信息栏 -->
     <div class="editor-info">
-      <div class="info-content">
-        <span>节点数量: {{ nodeCount }}</span>
-        <span>连接数量: {{ connectionCount }}</span>
-      </div>
+          <div class="info-content">
+      <span>节点数量: {{ nodeCount }}</span>
+      <span>连接数量: {{ connectionCount }}</span>
+      <span>画布位置: ({{ canvasInfo.x }}, {{ canvasInfo.y }})</span>
+      <span>缩放: {{ canvasInfo.scale }}x</span>
+    </div>
     </div>
 
     <!-- 编辑器画布 -->
@@ -24,9 +26,6 @@
       @touchend="onTouchEnd"
       @wheel="onWheel"
     >
-      <!-- 背景网格 -->
-      <div class="canvas-grid"></div>
-
       <!-- 可变换的画布内容容器 -->
       <div 
         class="canvas-content" 
@@ -34,6 +33,8 @@
           transform: `translate(${canvasTransform.x}px, ${canvasTransform.y}px) scale(${canvasTransform.scale})`
         }"
       >
+        <!-- 背景网格 -->
+        <div class="canvas-grid"></div>
         <!-- 节点 -->
         <BlueprintNode
           v-for="node in nodes"
@@ -136,6 +137,7 @@ const {
   connections,
   nodeCount,
   connectionCount,
+  canvasInfo,
   
   // 方法
   getNodeConnections,
