@@ -1,6 +1,9 @@
 // 类型定义入口文件
 export * from './blueprint'
 
+// 导入 Electron 类型定义
+import './electron'
+
 // 通用类型定义
 export interface Position {
   x: number

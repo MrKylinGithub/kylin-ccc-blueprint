@@ -88,28 +88,68 @@ export class BlueprintSerializer {
     const json = this.serialize(blueprint, nodeDefinitions)
     
     // 检查是否在 Electron 环境中（Cocos Creator 基于 Electron）
-    if (typeof require !== 'undefined') {
+    const isElectron = typeof window !== 'undefined' && window.process && window.process.versions && window.process.versions.electron
+    
+    if (isElectron) {
       try {
-        // 使用 Electron 的文件对话框 API
-        const { dialog } = require('electron').remote || require('electron')
-        const fs = require('fs')
+        console.log('尝试使用 Electron 文件对话框保存蓝图...')
         
-        const defaultFileName = filename || `${blueprint.name || 'blueprint'}.json`
-        const result = await dialog.showSaveDialog({
-          title: '保存蓝图文件',
-          defaultPath: defaultFileName,
-          filters: [
-            { name: 'JSON文件', extensions: ['json'] },
-            { name: '所有文件', extensions: ['*'] }
-          ]
-        })
+        // 在渲染进程中，尝试使用 IPC 或预加载的 API
+        let saveResult = null
         
-        if (!result.canceled && result.filePath) {
-          fs.writeFileSync(result.filePath, json, 'utf8')
-          return result.filePath
+        // 方式1: 检查是否有预加载的 electronAPI
+        if (typeof (window as any).electronAPI !== 'undefined') {
+          console.log('尝试使用 electronAPI')
+          try {
+            const electronAPI = (window as any).electronAPI
+            if (electronAPI.saveFile) {
+              const defaultFileName = filename || `${blueprint.name || 'blueprint'}.json`
+              saveResult = await electronAPI.saveFile({
+                title: '保存蓝图文件',
+                defaultPath: defaultFileName,
+                filters: [
+                  { name: 'JSON文件', extensions: ['json'] },
+                  { name: '所有文件', extensions: ['*'] }
+                ],
+                content: json
+              })
+            }
+          } catch (e: any) {
+            console.log('electronAPI 不可用:', e.message)
+          }
         }
         
-        return '' // 用户取消了保存
+        // 方式2: 检查是否有 ipcRenderer
+        if (!saveResult && typeof (window as any).electron !== 'undefined') {
+          console.log('尝试使用 ipcRenderer')
+          try {
+            const { ipcRenderer } = (window as any).electron
+            if (ipcRenderer) {
+              const defaultFileName = filename || `${blueprint.name || 'blueprint'}.json`
+              saveResult = await ipcRenderer.invoke('save-file', {
+                title: '保存蓝图文件',
+                defaultPath: defaultFileName,
+                filters: [
+                  { name: 'JSON文件', extensions: ['json'] },
+                  { name: '所有文件', extensions: ['*'] }
+                ],
+                content: json
+              })
+            }
+          } catch (e: any) {
+            console.log('ipcRenderer 不可用:', e.message)
+          }
+        }
+        
+        if (saveResult && !saveResult.canceled) {
+          return saveResult.filePath || saveResult
+        }
+        
+        if (saveResult && saveResult.canceled) {
+          return '' // 用户取消了保存
+        }
+        
+        console.log('无法找到可用的 Electron 文件对话框 API')
       } catch (error) {
         console.warn('无法使用 Electron 文件对话框，回退到浏览器下载:', error)
         // 回退到浏览器下载
@@ -137,28 +177,64 @@ export class BlueprintSerializer {
    */
   static async loadBlueprintFromFile(): Promise<SerializedBlueprint | null> {
     // 检查是否在 Electron 环境中（Cocos Creator 基于 Electron）
-    if (typeof require !== 'undefined') {
+    const isElectron = typeof window !== 'undefined' && window.process && window.process.versions && window.process.versions.electron
+    
+    if (isElectron) {
       try {
-        // 使用 Electron 的文件对话框 API
-        const { dialog } = require('electron').remote || require('electron')
-        const fs = require('fs')
+        console.log('尝试使用 Electron 文件对话框加载蓝图...')
         
-        const result = await dialog.showOpenDialog({
-          title: '选择蓝图文件',
-          filters: [
-            { name: 'JSON文件', extensions: ['json'] },
-            { name: '所有文件', extensions: ['*'] }
-          ],
-          properties: ['openFile']
-        })
+        // 在渲染进程中，尝试使用 IPC 或预加载的 API
+        let loadResult = null
         
-        if (!result.canceled && result.filePaths.length > 0) {
-          const filePath = result.filePaths[0]
-          const json = fs.readFileSync(filePath, 'utf8')
-          return this.deserialize(json)
+        // 方式1: 检查是否有预加载的 electronAPI
+        if (typeof (window as any).electronAPI !== 'undefined') {
+          console.log('尝试使用 electronAPI')
+          try {
+            const electronAPI = (window as any).electronAPI
+            if (electronAPI.loadFile) {
+              loadResult = await electronAPI.loadFile({
+                title: '选择蓝图文件',
+                filters: [
+                  { name: 'JSON文件', extensions: ['json'] },
+                  { name: '所有文件', extensions: ['*'] }
+                ],
+                properties: ['openFile']
+              })
+            }
+          } catch (e: any) {
+            console.log('electronAPI 不可用:', e.message)
+          }
         }
         
-        return null // 用户取消了选择
+        // 方式2: 检查是否有 ipcRenderer
+        if (!loadResult && typeof (window as any).electron !== 'undefined') {
+          console.log('尝试使用 ipcRenderer')
+          try {
+            const { ipcRenderer } = (window as any).electron
+            if (ipcRenderer) {
+              loadResult = await ipcRenderer.invoke('load-file', {
+                title: '选择蓝图文件',
+                filters: [
+                  { name: 'JSON文件', extensions: ['json'] },
+                  { name: '所有文件', extensions: ['*'] }
+                ],
+                properties: ['openFile']
+              })
+            }
+          } catch (e: any) {
+            console.log('ipcRenderer 不可用:', e.message)
+          }
+        }
+        
+        if (loadResult && !loadResult.canceled && loadResult.content) {
+          return this.deserialize(loadResult.content)
+        }
+        
+        if (loadResult && loadResult.canceled) {
+          return null // 用户取消了选择
+        }
+        
+        console.log('无法找到可用的 Electron 文件对话框 API')
       } catch (error) {
         console.warn('无法使用 Electron 文件对话框，回退到浏览器文件选择:', error)
         // 回退到浏览器文件选择
@@ -524,32 +600,82 @@ export class TypeScriptCodeGenerator {
     const code = this.generateCode()
     
     // 检查是否在 Electron 环境中（Cocos Creator 基于 Electron）
-    if (typeof require !== 'undefined') {
+    const isElectron = typeof window !== 'undefined' && window.process && window.process.versions && window.process.versions.electron
+    
+    console.log('=== 导出TS调试信息 ===')
+    console.log('isElectron:', isElectron)
+    console.log('window.process?.versions?.electron:', window.process?.versions?.electron)
+    console.log('typeof window.electron:', typeof (window as any).electron)
+    console.log('typeof window.electronAPI:', typeof (window as any).electronAPI)
+    
+    if (isElectron) {
       try {
-        // 使用 Electron 的文件对话框 API
-        const { dialog } = require('electron').remote || require('electron')
-        const fs = require('fs')
+        console.log('尝试使用 Electron 文件对话框...')
         
-        const defaultFileName = filename || `${this.blueprint.name || 'blueprint'}.ts`
-        const result = await dialog.showSaveDialog({
-          title: '保存TypeScript代码',
-          defaultPath: defaultFileName,
-          filters: [
-            { name: 'TypeScript文件', extensions: ['ts'] },
-            { name: '所有文件', extensions: ['*'] }
-          ]
-        })
+        // 在渲染进程中，尝试使用 IPC 或预加载的 API
+        let saveResult = null
         
-        if (!result.canceled && result.filePath) {
-          fs.writeFileSync(result.filePath, code, 'utf8')
-          return result.filePath
+        // 方式1: 检查是否有预加载的 electronAPI
+        if (typeof (window as any).electronAPI !== 'undefined') {
+          console.log('尝试使用 electronAPI')
+          try {
+            const electronAPI = (window as any).electronAPI
+            if (electronAPI.saveFile) {
+              const defaultFileName = filename || `${this.blueprint.name || 'blueprint'}.ts`
+              saveResult = await electronAPI.saveFile({
+                title: '保存TypeScript代码',
+                defaultPath: defaultFileName,
+                filters: [
+                  { name: 'TypeScript文件', extensions: ['ts'] },
+                  { name: '所有文件', extensions: ['*'] }
+                ],
+                content: code
+              })
+              console.log('electronAPI 保存结果:', saveResult)
+            }
+          } catch (e: any) {
+            console.log('electronAPI 不可用:', e.message)
+          }
         }
         
-        return '' // 用户取消了保存
+        // 方式2: 检查是否有 ipcRenderer
+        if (!saveResult && typeof (window as any).electron !== 'undefined') {
+          console.log('尝试使用 ipcRenderer')
+          try {
+            const { ipcRenderer } = (window as any).electron
+            if (ipcRenderer) {
+              const defaultFileName = filename || `${this.blueprint.name || 'blueprint'}.ts`
+              saveResult = await ipcRenderer.invoke('save-file', {
+                title: '保存TypeScript代码',
+                defaultPath: defaultFileName,
+                filters: [
+                  { name: 'TypeScript文件', extensions: ['ts'] },
+                  { name: '所有文件', extensions: ['*'] }
+                ],
+                content: code
+              })
+              console.log('ipcRenderer 保存结果:', saveResult)
+            }
+          } catch (e: any) {
+            console.log('ipcRenderer 不可用:', e.message)
+          }
+        }
+        
+        if (saveResult && !saveResult.canceled) {
+          return saveResult.filePath || saveResult
+        }
+        
+        if (saveResult && saveResult.canceled) {
+          return '' // 用户取消了保存
+        }
+        
+        console.log('无法找到可用的 Electron 文件对话框 API')
       } catch (error) {
         console.warn('无法使用 Electron 文件对话框，回退到浏览器下载:', error)
         // 回退到浏览器下载
       }
+    } else {
+      console.log('不在 Electron 环境中，使用浏览器下载')
     }
     
     // 回退到浏览器下载方式
