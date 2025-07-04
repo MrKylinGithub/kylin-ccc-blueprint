@@ -198,7 +198,7 @@ export const useBlueprintTabs = () => {
   const activeTab = computed(() => blueprintStore.activeTab)
 
   // 保存蓝图为JSON文件
-  const saveBlueprint = () => {
+  const saveBlueprint = async () => {
     const tab = activeTab.value
     if (!tab) {
       if (showMessage && typeof showMessage === 'function') {
@@ -212,19 +212,27 @@ export const useBlueprintTabs = () => {
     }
 
     try {
-      const fileName = BlueprintSerializer.downloadBlueprint(
+      const filePath = await BlueprintSerializer.downloadBlueprint(
         tab.blueprint,
         blueprintStore.nodeDefinitions,
         `${tab.name}.json`
       )
       
-      blueprintStore.markTabClean(tab.id)
-      
-      if (showMessage && typeof showMessage === 'function') {
+      if (filePath) {
+        blueprintStore.markTabClean(tab.id)
+        
+        if (showMessage && typeof showMessage === 'function') {
+          showMessage({
+            message: `蓝图 "${tab.name}" 已保存：${filePath}`,
+            type: 'success',
+            duration: 3000
+          })
+        }
+      } else if (showMessage && typeof showMessage === 'function') {
         showMessage({
-          message: `蓝图 "${tab.name}" 已保存到下载文件夹：${fileName}`,
-          type: 'success',
-          duration: 3000
+          message: '保存已取消',
+          type: 'info',
+          duration: 2000
         })
       }
     } catch (error) {
@@ -262,6 +270,12 @@ export const useBlueprintTabs = () => {
             duration: 2000
           })
         }
+      } else if (showMessage && typeof showMessage === 'function') {
+        showMessage({
+          message: '加载已取消',
+          type: 'info',
+          duration: 2000
+        })
       }
     } catch (error) {
       if (showMessage && typeof showMessage === 'function') {
@@ -275,7 +289,7 @@ export const useBlueprintTabs = () => {
   }
 
   // 导出TypeScript代码
-  const exportTypeScript = () => {
+  const exportTypeScript = async () => {
     const tab = activeTab.value
     if (!tab) {
       if (showMessage && typeof showMessage === 'function') {
@@ -294,13 +308,19 @@ export const useBlueprintTabs = () => {
         blueprintStore.nodeDefinitions
       )
       
-      const fileName = generator.downloadCode(`${tab.name}.ts`)
+      const filePath = await generator.downloadCode(`${tab.name}.ts`)
       
-      if (showMessage && typeof showMessage === 'function') {
+      if (filePath && showMessage && typeof showMessage === 'function') {
         showMessage({
-          message: `蓝图 "${tab.name}" 的TypeScript代码已导出到下载文件夹：${fileName}`,
+          message: `蓝图 "${tab.name}" 的TypeScript代码已导出：${filePath}`,
           type: 'success',
           duration: 3000
+        })
+      } else if (!filePath && showMessage && typeof showMessage === 'function') {
+        showMessage({
+          message: '导出已取消',
+          type: 'info',
+          duration: 2000
         })
       }
     } catch (error) {

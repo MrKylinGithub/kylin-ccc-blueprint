@@ -80,12 +80,43 @@ export class BlueprintSerializer {
   /**
    * 下载蓝图为JSON文件
    */
-  static downloadBlueprint(
+  static async downloadBlueprint(
     blueprint: Blueprint,
     nodeDefinitions: NodeDefinition[],
     filename?: string
-  ): string {
+  ): Promise<string> {
     const json = this.serialize(blueprint, nodeDefinitions)
+    
+    // 检查是否在 Electron 环境中（Cocos Creator 基于 Electron）
+    if (typeof require !== 'undefined') {
+      try {
+        // 使用 Electron 的文件对话框 API
+        const { dialog } = require('electron').remote || require('electron')
+        const fs = require('fs')
+        
+        const defaultFileName = filename || `${blueprint.name || 'blueprint'}.json`
+        const result = await dialog.showSaveDialog({
+          title: '保存蓝图文件',
+          defaultPath: defaultFileName,
+          filters: [
+            { name: 'JSON文件', extensions: ['json'] },
+            { name: '所有文件', extensions: ['*'] }
+          ]
+        })
+        
+        if (!result.canceled && result.filePath) {
+          fs.writeFileSync(result.filePath, json, 'utf8')
+          return result.filePath
+        }
+        
+        return '' // 用户取消了保存
+      } catch (error) {
+        console.warn('无法使用 Electron 文件对话框，回退到浏览器下载:', error)
+        // 回退到浏览器下载
+      }
+    }
+    
+    // 回退到浏览器下载方式
     const blob = new Blob([json], { type: 'application/json' })
     const url = URL.createObjectURL(blob)
     
@@ -104,7 +135,37 @@ export class BlueprintSerializer {
   /**
    * 从文件上传加载蓝图
    */
-  static loadBlueprintFromFile(): Promise<SerializedBlueprint | null> {
+  static async loadBlueprintFromFile(): Promise<SerializedBlueprint | null> {
+    // 检查是否在 Electron 环境中（Cocos Creator 基于 Electron）
+    if (typeof require !== 'undefined') {
+      try {
+        // 使用 Electron 的文件对话框 API
+        const { dialog } = require('electron').remote || require('electron')
+        const fs = require('fs')
+        
+        const result = await dialog.showOpenDialog({
+          title: '选择蓝图文件',
+          filters: [
+            { name: 'JSON文件', extensions: ['json'] },
+            { name: '所有文件', extensions: ['*'] }
+          ],
+          properties: ['openFile']
+        })
+        
+        if (!result.canceled && result.filePaths.length > 0) {
+          const filePath = result.filePaths[0]
+          const json = fs.readFileSync(filePath, 'utf8')
+          return this.deserialize(json)
+        }
+        
+        return null // 用户取消了选择
+      } catch (error) {
+        console.warn('无法使用 Electron 文件对话框，回退到浏览器文件选择:', error)
+        // 回退到浏览器文件选择
+      }
+    }
+    
+    // 回退到浏览器文件选择方式
     return new Promise((resolve) => {
       const input = document.createElement('input')
       input.type = 'file'
@@ -459,10 +520,39 @@ export class TypeScriptCodeGenerator {
   /**
    * 下载生成的TypeScript代码
    */
-  downloadCode(filename?: string): string {
+  async downloadCode(filename?: string): Promise<string> {
     const code = this.generateCode()
     
-    // 直接使用浏览器下载方式
+    // 检查是否在 Electron 环境中（Cocos Creator 基于 Electron）
+    if (typeof require !== 'undefined') {
+      try {
+        // 使用 Electron 的文件对话框 API
+        const { dialog } = require('electron').remote || require('electron')
+        const fs = require('fs')
+        
+        const defaultFileName = filename || `${this.blueprint.name || 'blueprint'}.ts`
+        const result = await dialog.showSaveDialog({
+          title: '保存TypeScript代码',
+          defaultPath: defaultFileName,
+          filters: [
+            { name: 'TypeScript文件', extensions: ['ts'] },
+            { name: '所有文件', extensions: ['*'] }
+          ]
+        })
+        
+        if (!result.canceled && result.filePath) {
+          fs.writeFileSync(result.filePath, code, 'utf8')
+          return result.filePath
+        }
+        
+        return '' // 用户取消了保存
+      } catch (error) {
+        console.warn('无法使用 Electron 文件对话框，回退到浏览器下载:', error)
+        // 回退到浏览器下载
+      }
+    }
+    
+    // 回退到浏览器下载方式
     const blob = new Blob([code], { type: 'text/typescript' })
     const url = URL.createObjectURL(blob)
     
