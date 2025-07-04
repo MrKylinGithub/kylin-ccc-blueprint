@@ -679,18 +679,50 @@ export class TypeScriptCodeGenerator {
     }
     
     // 回退到浏览器下载方式
-    const blob = new Blob([code], { type: 'text/typescript' })
-    const url = URL.createObjectURL(blob)
-    
-    const link = document.createElement('a')
-    link.href = url
-    const fileName = filename || `${this.blueprint.name || 'blueprint'}.ts`
-    link.download = fileName
-    document.body.appendChild(link)
-    link.click()
-    document.body.removeChild(link)
-    
-    URL.revokeObjectURL(url)
-    return fileName
+    console.log('开始浏览器下载...')
+    try {
+      const fileName = filename || `${this.blueprint.name || 'blueprint'}.ts`
+      
+      // 在 Electron 环境中，尝试使用 data URI 替代 blob URL
+      if (isElectron) {
+        console.log('在 Electron 环境中使用 data URI 下载')
+        const dataUri = `data:text/typescript;charset=utf-8,${encodeURIComponent(code)}`
+        const link = document.createElement('a')
+        link.href = dataUri
+        link.download = fileName
+        document.body.appendChild(link)
+        link.click()
+        document.body.removeChild(link)
+        console.log('data URI 下载完成')
+        return fileName
+      } else {
+        console.log('使用 blob URL 下载')
+        const blob = new Blob([code], { type: 'text/typescript' })
+        const url = URL.createObjectURL(blob)
+        
+        const link = document.createElement('a')
+        link.href = url
+        link.download = fileName
+        document.body.appendChild(link)
+        link.click()
+        document.body.removeChild(link)
+        
+        URL.revokeObjectURL(url)
+        console.log('blob URL 下载完成')
+        return fileName
+      }
+    } catch (error) {
+      console.error('浏览器下载失败:', error)
+      
+      // 最终回退：直接复制到剪贴板
+      try {
+        await navigator.clipboard.writeText(code)
+        console.log('已复制TypeScript代码到剪贴板')
+        return '已复制到剪贴板'
+      } catch (clipboardError) {
+        console.error('复制到剪贴板也失败:', clipboardError)
+        throw new Error('下载失败，请手动复制代码')
+      }
+    }
   }
 } 
