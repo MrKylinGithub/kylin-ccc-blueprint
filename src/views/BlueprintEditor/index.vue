@@ -16,11 +16,9 @@
       class="editor-canvas"
       @drop="onDrop"
       @dragover="onDragOver"
-      @mousedown="onCanvasMouseDown"
       @mousemove="onCanvasMouseMove"
       @mouseup="onCanvasMouseUp"
       @contextmenu="onCanvasContextMenu"
-      @dblclick="onCanvasDoubleClick"
       @touchstart="onTouchStart"
       @touchmove="onTouchMove"
       @touchend="onTouchEnd"
@@ -33,8 +31,12 @@
           transform: `translate(${canvasTransform.x}px, ${canvasTransform.y}px) scale(${canvasTransform.scale})`
         }"
       >
-        <!-- 背景网格 -->
-        <div class="canvas-grid"></div>
+        <!-- 背景网格 - 负责拖拽事件检测 -->
+        <div 
+          class="canvas-grid"
+          @mousedown="onCanvasMouseDown"
+          @dblclick="onCanvasDoubleClick"
+        ></div>
         <!-- 节点 -->
         <BlueprintNode
           v-for="node in nodes"
@@ -42,6 +44,7 @@
           :node="node"
           :is-selected="selectedNodeId === node.id"
           :connected-ports="getNodeConnections(node.id)"
+          :canvas-transform="canvasTransform"
           @delete="deleteNode(node.id)"
           @move="moveNode(node.id, $event)"
           @select="selectNode(node.id)"

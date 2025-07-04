@@ -114,23 +114,16 @@ export const useBlueprintEditor = (props: Props) => {
   }
 
   const onCanvasMouseDown = (event: MouseEvent) => {
-    // 确保只有点击画布本身或背景网格才触发拖拽
-    const target = event.target as HTMLElement
-    const isCanvasElement = target === canvasRef.value || 
-                           target.classList.contains('canvas-grid') ||
-                           target.classList.contains('canvas-content')
-    
-    if (isCanvasElement) {
+    // 只有在点击背景网格时才触发画布拖拽
+    if (event.target === event.currentTarget) {
+      // 背景网格触发拖拽，清除选择状态
       selectedNodeId.value = ''
       selectedConnectionId.value = ''
       
-      // 开始拖拽画布
+      // 开始拖拽画布内容
       isMouseDragging.value = true
       lastMousePosition.value = { x: event.clientX, y: event.clientY }
       dragStartPosition.value = { x: event.clientX, y: event.clientY }
-      
-      // 防止默认行为
-      event.preventDefault()
     }
   }
 
@@ -182,25 +175,19 @@ export const useBlueprintEditor = (props: Props) => {
   }
 
   const onCanvasContextMenu = (event: MouseEvent) => {
-    event.preventDefault()
+    // 可以在这里添加右键菜单逻辑
   }
 
   // 双击重置画布位置
   const onCanvasDoubleClick = (event: MouseEvent) => {
-    const target = event.target as HTMLElement
-    const isCanvasElement = target === canvasRef.value || 
-                           target.classList.contains('canvas-grid') ||
-                           target.classList.contains('canvas-content')
-    
-    if (isCanvasElement) {
-      canvasTransform.value = { x: 0, y: 0, scale: 1 }
-    }
+    // 背景网格双击重置画布
+    canvasTransform.value = { x: 0, y: 0, scale: 1 }
   }
 
   // 触摸事件处理
   const onTouchStart = (event: TouchEvent) => {
     if (event.touches.length === 2) {
-      // 双指操作开始
+      // 只有在双指操作时才preventDefault，避免影响单指点击
       event.preventDefault()
       isPanning.value = true
       
@@ -221,6 +208,7 @@ export const useBlueprintEditor = (props: Props) => {
       initialPinchDistance.value = distance
       initialScale.value = canvasTransform.value.scale
     }
+    // 单指操作不调用preventDefault，允许正常的点击事件
   }
 
   const onTouchMove = (event: TouchEvent) => {
@@ -310,6 +298,7 @@ export const useBlueprintEditor = (props: Props) => {
     
     const node = blueprint.nodes.find((n: any) => n.id === nodeId)
     if (node) {
+      // 传入的 position 已经是相对于 canvas-content 的坐标，直接使用
       node.position = position
       blueprintStore.markTabDirty(blueprintStore.activeTabId)
       
@@ -414,17 +403,21 @@ export const useBlueprintEditor = (props: Props) => {
     const definition = blueprintStore.nodeDefinitions.find((d: any) => d.id === node.definitionId)
     if (!definition) return null
     
-    // 尝试从DOM获取实际端口位置
+    // 尝试从DOM获取准确的端口位置，然后转换为canvas-content坐标系
     const canvasElement = canvasRef.value
     if (canvasElement) {
-      const canvasRect = canvasElement.getBoundingClientRect()
       const portSelector = `[data-node-id="${nodeId}"][data-port-type="${portType}"][data-param-id="${paramId}"]`
       const portElement = canvasElement.querySelector(portSelector) as HTMLElement
+      const canvasContentElement = canvasElement.querySelector('.canvas-content') as HTMLElement
       
-      if (portElement) {
+      if (portElement && canvasContentElement) {
         const portRect = portElement.getBoundingClientRect()
-        const portCenterX = portRect.left + portRect.width / 2 - canvasRect.left
-        const portCenterY = portRect.top + portRect.height / 2 - canvasRect.top
+        const canvasContentRect = canvasContentElement.getBoundingClientRect()
+        
+        // 计算端口中心相对于canvas-content的位置
+        const portCenterX = (portRect.left + portRect.width / 2 - canvasContentRect.left) / canvasTransform.value.scale
+        const portCenterY = (portRect.top + portRect.height / 2 - canvasContentRect.top) / canvasTransform.value.scale
+        
         return { x: portCenterX, y: portCenterY }
       }
     }
@@ -540,20 +533,13 @@ export const useBlueprintEditor = (props: Props) => {
     }
   }
 
-  // 全局鼠标事件处理
-  const onGlobalMouseUp = () => {
-    isMouseDragging.value = false
-  }
-
   // 挂载时添加事件监听
   onMounted(() => {
     document.addEventListener('keydown', onKeyDown)
-    document.addEventListener('mouseup', onGlobalMouseUp)
   })
 
   onUnmounted(() => {
     document.removeEventListener('keydown', onKeyDown)
-    document.removeEventListener('mouseup', onGlobalMouseUp)
   })
 
   return {

@@ -111,6 +111,11 @@ interface Props {
     inputs: Set<string>;
     outputs: Set<string>;
   };
+  canvasTransform?: {
+    x: number;
+    y: number;
+    scale: number;
+  };
 }
 
 interface Emits {
@@ -131,31 +136,60 @@ const definition = computed(() => {
 });
 
 let isDragging = false;
-let dragOffset = { x: 0, y: 0 };
+let dragStartMouse = { x: 0, y: 0 };
+let dragStartPosition = { x: 0, y: 0 };
 
 // 鼠标按下
 const onMouseDown = (event: MouseEvent) => {
   emit('select');
   
   if (event.button === 0) { // 左键
+    // 只有在节点主体（非按钮区域）上才启动拖拽
+    const target = event.target as HTMLElement;
+    
+    // 检查是否点击了删除按钮（包括其内部元素）
+    if (target.closest('.delete-btn') || 
+        target.closest('.el-button') || 
+        target.closest('.param-port') || 
+        target.closest('.param-value') ||
+        target.closest('.el-input') ||
+        target.closest('.el-input-number') ||
+        target.closest('.el-switch')) {
+      // 点击的是删除按钮、端口或输入控件，不启动拖拽
+      return;
+    }
+    
+    event.stopPropagation(); // 只在启动拖拽时阻止事件传播
     isDragging = true;
-    dragOffset.x = event.clientX - props.node.position.x;
-    dragOffset.y = event.clientY - props.node.position.y;
+    
+    // 记录拖拽开始时的鼠标位置和节点位置
+    dragStartMouse.x = event.clientX;
+    dragStartMouse.y = event.clientY;
+    dragStartPosition.x = props.node.position.x;
+    dragStartPosition.y = props.node.position.y;
     
     document.addEventListener('mousemove', onMouseMove);
     document.addEventListener('mouseup', onMouseUp);
-    
-    event.preventDefault();
   }
 };
 
 // 鼠标移动
 const onMouseMove = (event: MouseEvent) => {
-  if (isDragging) {
+  if (isDragging && props.canvasTransform) {
+    // 计算鼠标移动的距离
+    const mouseDeltaX = event.clientX - dragStartMouse.x;
+    const mouseDeltaY = event.clientY - dragStartMouse.y;
+    
+    // 将屏幕像素距离转换为逻辑坐标距离（考虑缩放）
+    const logicalDeltaX = mouseDeltaX / props.canvasTransform.scale;
+    const logicalDeltaY = mouseDeltaY / props.canvasTransform.scale;
+    
+    // 计算新的节点位置
     const newPosition = {
-      x: event.clientX - dragOffset.x,
-      y: event.clientY - dragOffset.y
+      x: dragStartPosition.x + logicalDeltaX,
+      y: dragStartPosition.y + logicalDeltaY
     };
+    
     emit('move', newPosition);
   }
 };
@@ -169,7 +203,6 @@ const onMouseUp = () => {
 
 // 右键菜单
 const onContextMenu = (event: MouseEvent) => {
-  event.preventDefault();
   // 可以在这里添加右键菜单逻辑
 };
 

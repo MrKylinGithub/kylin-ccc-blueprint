@@ -31,11 +31,6 @@
   overflow: hidden;
   background: $color-bg-dark;
   min-height: 200px;
-  cursor: grab;
-  
-  &:active {
-    cursor: grabbing;
-  }
 }
 
 .canvas-content {
@@ -59,15 +54,21 @@
     linear-gradient(to right, $color-border 1px, transparent 1px),
     linear-gradient(to bottom, $color-border 1px, transparent 1px);
   background-size: 20px 20px;
-  pointer-events: none;
+  pointer-events: auto;
+  cursor: grab;
+  
+  &:active {
+    cursor: grabbing;
+  }
 }
 
 .connections-svg {
   z-index: 20; /* 连接线显示在节点上方 */
+  pointer-events: none; /* SVG容器不拦截点击事件 */
 }
 
 .connection-path {
-  pointer-events: stroke;
+  pointer-events: stroke; /* 只有连接线本身可以点击 */
   cursor: pointer;
   transition: stroke-width 0.2s;
   stroke: $color-text-light;
