@@ -48,6 +48,7 @@
           @delete="deleteNode(node.id)"
           @move="moveNode(node.id, $event)"
           @select="selectNode(node.id)"
+          @drag-end="onNodeDragEnd(node.id)"
           @port-mouse-down="onPortMouseDown"
           @port-mouse-up="onPortMouseUp"
           @input-change="onNodeInputChange"
@@ -158,6 +159,7 @@ const {
   deleteNode,
   moveNode,
   selectNode,
+  onNodeDragEnd,
   onNodeInputChange,
   onPortMouseDown,
   onPortMouseUp,

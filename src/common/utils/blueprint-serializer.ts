@@ -461,6 +461,8 @@ export class TypeScriptCodeGenerator {
    */
   downloadCode(filename?: string): string {
     const code = this.generateCode()
+    
+    // 直接使用浏览器下载方式
     const blob = new Blob([code], { type: 'text/typescript' })
     const url = URL.createObjectURL(blob)
     

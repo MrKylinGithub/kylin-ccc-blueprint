@@ -1,4 +1,4 @@
-import { ref, computed, inject, onMounted, onUnmounted } from 'vue'
+import { ref, computed, inject, onMounted, onUnmounted, nextTick } from 'vue'
 import { blueprintStore } from '../../stores/blueprint'
 import { keyMessage } from '../../panels/provide-inject'
 import type { NodeConnection } from '../../types/blueprint'
@@ -307,6 +307,21 @@ export const useBlueprintEditor = (props: Props) => {
     }
   }
 
+  const onNodeDragEnd = (nodeId: string) => {
+    // 强制重新渲染：先将触发器设为一个随机值，强制所有连接线重新计算
+    const forceUpdate = () => {
+      connectionUpdateTrigger.value = Math.random()
+    }
+    
+    // 多重强制更新
+    requestAnimationFrame(() => {
+      forceUpdate()
+      requestAnimationFrame(() => {
+        forceUpdate()
+      })
+    })
+  }
+
   const selectNode = (nodeId: string) => {
     selectedNodeId.value = nodeId
     selectedConnectionId.value = ''
@@ -577,6 +592,7 @@ export const useBlueprintEditor = (props: Props) => {
     deleteNode,
     moveNode,
     selectNode,
+    onNodeDragEnd,
     onNodeInputChange,
     onPortMouseDown,
     onPortMouseUp,

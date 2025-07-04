@@ -122,6 +122,7 @@ interface Emits {
   (e: 'delete'): void;
   (e: 'move', position: { x: number; y: number }): void;
   (e: 'select'): void;
+  (e: 'dragEnd'): void;
   (e: 'portMouseDown', event: MouseEvent, nodeId: string, portType: 'input' | 'output', paramId: string): void;
   (e: 'portMouseUp', event: MouseEvent, nodeId: string, portType: 'input' | 'output', paramId: string): void;
   (e: 'inputChange'): void;
@@ -199,6 +200,9 @@ const onMouseUp = () => {
   isDragging = false;
   document.removeEventListener('mousemove', onMouseMove);
   document.removeEventListener('mouseup', onMouseUp);
+  
+  // 拖拽结束时，触发一次额外的更新以确保连接线对齐
+  emit('dragEnd');
 };
 
 // 右键菜单
