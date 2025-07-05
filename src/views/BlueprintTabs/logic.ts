@@ -124,21 +124,15 @@ export const useBlueprintTabs = () => {
     try {
       const blueprintList = await BlueprintSerializer.loadBlueprintFromProject()
       
+      // 总是显示文件选择对话框，无论是否找到文件
+      projectBlueprintFiles.value = blueprintList
       if (blueprintList.length > 0) {
-        // 有项目文件，显示选择对话框
-        projectBlueprintFiles.value = blueprintList
         selectedFileUuid.value = blueprintList[0].uuid
-        showFileSelectDialog.value = true
       } else {
-        // 没有项目文件，提示用户
-        if (showMessage && typeof showMessage === 'function') {
-          showMessage({
-            message: '项目中没有找到蓝图文件（*.bp），请先保存一个蓝图文件',
-            type: 'warning',
-            duration: 3000
-          })
-        }
+        selectedFileUuid.value = ''
       }
+      showFileSelectDialog.value = true
+      
     } catch (error) {
       if (showMessage && typeof showMessage === 'function') {
         showMessage({
