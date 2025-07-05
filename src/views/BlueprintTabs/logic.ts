@@ -1,9 +1,9 @@
-import { computed, ref, reactive, inject } from 'vue'
-import { ElMessageBox, type FormInstance } from 'element-plus'
+import { computed, inject } from 'vue'
+import { ElMessageBox } from 'element-plus'
 import { blueprintStore } from '../../stores/blueprint'
 import { keyMessage } from '../../panels/provide-inject'
 import { BlueprintSerializer, TypeScriptCodeGenerator } from '../../common/utils/blueprint-serializer'
-import type { CreateFormData, CreateFormRules, TabMethods } from './types'
+import type { TabMethods } from './types'
 
 export const useBlueprintTabs = () => {
   // 注入插件环境专用的消息系统
@@ -13,68 +13,14 @@ export const useBlueprintTabs = () => {
   const tabs = computed(() => blueprintStore.tabs)
   const activeTabId = computed(() => blueprintStore.activeTabId)
 
-  // 新建蓝图对话框相关
-  const showCreateDialog = ref(false)
-  const createForm = ref<FormInstance>()
-  const createFormData = reactive<CreateFormData>({
-    name: '',
-    description: ''
-  })
 
-  const createFormRules: CreateFormRules = {
-    name: [
-      { required: true, message: '请输入蓝图名称', trigger: 'blur' },
-      { min: 1, max: 50, message: '名称长度应在 1 到 50 个字符', trigger: 'blur' }
-    ]
-  }
 
   // 选择标签页
   const selectTab = (tabId: string) => {
     blueprintStore.activeTabId = tabId
   }
 
-  // 显示创建对话框时重置表单
-  const handleCreateDialogClose = (done: () => void) => {
-    createFormData.name = ''
-    createFormData.description = ''
-    createForm.value?.clearValidate()
-    done()
-  }
 
-  // 确认创建蓝图
-  const confirmCreate = async () => {
-    if (!createForm.value) return
-    
-    try {
-      await createForm.value.validate()
-      
-      const tab = blueprintStore.createTab()
-      tab.name = createFormData.name.trim()
-      tab.blueprint.name = createFormData.name.trim()
-      
-      if (createFormData.description.trim()) {
-        tab.blueprint.description = createFormData.description.trim()
-      }
-      
-      showCreateDialog.value = false
-      
-      // 使用插件环境专用的消息系统
-      if (showMessage && typeof showMessage === 'function') {
-        showMessage({
-          message: `蓝图 "${tab.name}" 创建成功`,
-          type: 'success',
-          duration: 3000
-        })
-      }
-    } catch (error) {
-      // 表单验证失败
-    }
-  }
-
-  // 取消创建
-  const cancelCreate = () => {
-    showCreateDialog.value = false
-  }
 
   // 关闭标签页
   const closeTab = async (tabId: string) => {
@@ -268,16 +214,9 @@ export const useBlueprintTabs = () => {
     tabs,
     activeTabId,
     activeTab,
-    showCreateDialog,
-    createForm,
-    createFormData,
-    createFormRules,
     
     // 方法
     selectTab,
-    handleCreateDialogClose,
-    confirmCreate,
-    cancelCreate,
     closeTab,
     methods,
     

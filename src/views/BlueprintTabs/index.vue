@@ -25,23 +25,7 @@
         </div>
       </div>
       
-      <!-- 工具栏按钮 -->
-      <div class="tabs-toolbar" v-if="tabs.length > 0">
-        <el-button-group size="small">
-          <el-button @click="saveBlueprint" :disabled="!activeTab">
-            <el-icon><Download /></el-icon>
-            保存
-          </el-button>
-          <el-button @click="loadBlueprint">
-            <el-icon><Upload /></el-icon>
-            加载
-          </el-button>
-          <el-button @click="exportTypeScript" :disabled="!activeTab">
-            <el-icon><Promotion /></el-icon>
-            导出TS
-          </el-button>
-        </el-button-group>
-      </div>
+
     </div>
 
     <!-- 标签页内容 -->
@@ -52,7 +36,7 @@
             <Document />
           </el-icon>
           <h3>暂无蓝图</h3>
-          <p>点击工具栏中的"新建蓝图"开始创建你的第一个蓝图</p>
+          <p>点击工具栏中的"打开"按钮来加载蓝图文件</p>
         </div>
       </div>
       
@@ -66,56 +50,12 @@
       </div>
     </div>
 
-    <!-- 新建蓝图模态弹窗 -->
-    <el-dialog
-      v-model="showCreateDialog"
-      title="新建蓝图"
-      width="400px"
-      :before-close="handleCreateDialogClose"
-      center
-    >
-      <el-form 
-        ref="createForm" 
-        :model="createFormData" 
-        :rules="createFormRules"
-        label-width="80px"
-        label-position="left"
-      >
-        <el-form-item label="蓝图名称" prop="name">
-          <el-input
-            v-model="createFormData.name"
-            placeholder="请输入蓝图名称"
-            maxlength="50"
-            show-word-limit
-            @keyup.enter="confirmCreate"
-          />
-        </el-form-item>
-        <el-form-item label="蓝图描述" prop="description">
-          <el-input
-            v-model="createFormData.description"
-            type="textarea"
-            placeholder="可选：输入蓝图描述"
-            :rows="3"
-            maxlength="200"
-            show-word-limit
-          />
-        </el-form-item>
-      </el-form>
-      
-      <template #footer>
-        <span class="dialog-footer">
-          <el-button @click="cancelCreate">取消</el-button>
-          <el-button type="primary" @click="confirmCreate">
-            创建蓝图
-          </el-button>
-        </span>
-      </template>
-    </el-dialog>
+
   </div>
 </template>
 
 <script setup lang="ts">
-import { Close, Document, Download, Upload, Promotion } from '@element-plus/icons-vue'
+import { Close, Document } from '@element-plus/icons-vue'
 import BlueprintEditor from '../BlueprintEditor/index.vue'
 import { useBlueprintTabs } from './logic'
 
@@ -124,20 +64,13 @@ const {
   tabs,
   activeTabId,
   activeTab,
-  showCreateDialog,
-  createForm,
-  createFormData,
-  createFormRules,
   
   // 方法
   selectTab,
-  handleCreateDialogClose,
-  confirmCreate,
-  cancelCreate,
   closeTab,
   methods,
   
-  // 新的序列化方法
+  // 序列化方法
   saveBlueprint,
   loadBlueprint,
   exportTypeScript
