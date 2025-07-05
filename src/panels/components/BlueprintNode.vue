@@ -401,7 +401,8 @@ const isConstantNode = computed(() => {
 }
 
 .param-value .el-input,
-.param-value .el-input-number {
+.param-value .el-input-number,
+.param-value .el-select {
   width: 100%;
 }
 
@@ -411,6 +412,56 @@ const isConstantNode = computed(() => {
 
 .param-value .el-switch {
   margin-left: auto;
+}
+
+/* 下拉选择器样式 */
+.param-value .el-select .el-input__wrapper {
+  background-color: #3a3a3a !important;
+  border: 1px solid #555555 !important;
+  box-shadow: none !important;
+}
+
+.param-value .el-select .el-input__wrapper:hover {
+  border-color: #409eff !important;
+}
+
+.param-value .el-select .el-input__wrapper.is-focus {
+  border-color: #409eff !important;
+  box-shadow: 0 0 0 1px rgba(64, 158, 255, 0.2) !important;
+}
+
+.param-value .el-select .el-input__inner {
+  color: #cccccc !important;
+  background-color: transparent !important;
+}
+
+.param-value .el-select .el-input__suffix {
+  color: #888888 !important;
+}
+
+.param-value .el-select .el-input__suffix:hover {
+  color: #409eff !important;
+}
+
+/* 下拉选项面板样式 */
+:deep(.el-select-dropdown) {
+  background-color: #3a3a3a !important;
+  border: 1px solid #555555 !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3) !important;
+}
+
+:deep(.el-select-dropdown .el-select-dropdown__item) {
+  background-color: transparent !important;
+  color: #cccccc !important;
+}
+
+:deep(.el-select-dropdown .el-select-dropdown__item:hover) {
+  background-color: #525252 !important;
+}
+
+:deep(.el-select-dropdown .el-select-dropdown__item.selected) {
+  background-color: #409eff !important;
+  color: white !important;
 }
 
 /* 输入参数端口在左侧 */
