@@ -108,7 +108,6 @@
                 class="file-radio"
               >
                 <div class="file-info">
-                  <span class="file-name">{{ file.name }}</span>
                   <span class="file-path">{{ file.url }}</span>
                 </div>
               </el-radio>
@@ -123,7 +122,6 @@
       
       <template #footer>
         <div class="dialog-footer">
-          <el-button @click="cancelSelectFile">取消</el-button>
           <el-button 
             v-if="projectBlueprintFiles.length > 0"
             type="primary" 
