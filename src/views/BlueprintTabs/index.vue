@@ -50,6 +50,41 @@
       </div>
     </div>
     
+    <!-- 新建蓝图对话框 -->
+    <el-dialog
+      v-model="showNewBlueprintDialog"
+      title="新建蓝图"
+      width="400px"
+      :before-close="cancelNewBlueprint"
+      center
+    >
+      <div style="padding: 20px 0;">
+        <p style="margin-bottom: 16px; color: #666;">
+          请输入新蓝图的名称：
+        </p>
+        
+        <el-input
+          v-model="newBlueprintName"
+          placeholder="请输入蓝图名称"
+          maxlength="50"
+          show-word-limit
+          @keyup.enter="confirmNewBlueprint"
+        />
+      </div>
+      
+      <template #footer>
+        <div class="dialog-footer">
+          <el-button @click="cancelNewBlueprint">取消</el-button>
+          <el-button 
+            type="primary" 
+            @click="confirmNewBlueprint"
+          >
+            创建蓝图
+          </el-button>
+        </div>
+      </template>
+    </el-dialog>
+    
     <!-- 蓝图文件选择对话框 -->
     <el-dialog
       v-model="showFileSelectDialog"
@@ -118,6 +153,10 @@ const {
   projectBlueprintFiles,
   selectedFileUuid,
   
+  // 新建蓝图对话框状态
+  showNewBlueprintDialog,
+  newBlueprintName,
+  
   // 方法
   selectTab,
   closeTab,
@@ -126,6 +165,10 @@ const {
   // 文件选择方法
   confirmSelectFile,
   cancelSelectFile,
+  
+  // 新建蓝图方法
+  confirmNewBlueprint,
+  cancelNewBlueprint,
   
   // 序列化方法
   saveBlueprint,

@@ -17,6 +17,10 @@ export const useBlueprintTabs = () => {
   const showFileSelectDialog = ref(false)
   const projectBlueprintFiles = ref<Array<{ name: string; url: string; uuid: string }>>([])
   const selectedFileUuid = ref('')
+  
+  // 新建蓝图对话框相关
+  const showNewBlueprintDialog = ref(false)
+  const newBlueprintName = ref('')
 
 
 
@@ -260,8 +264,26 @@ export const useBlueprintTabs = () => {
 
   // 新建蓝图
   const newBlueprint = () => {
-    const timestamp = Date.now()
-    const tab = blueprintStore.createTab(`新蓝图_${timestamp.toString().slice(-4)}`)
+    newBlueprintName.value = ''
+    showNewBlueprintDialog.value = true
+  }
+  
+  // 确认新建蓝图
+  const confirmNewBlueprint = () => {
+    const name = newBlueprintName.value.trim()
+    if (!name) {
+      if (showMessage && typeof showMessage === 'function') {
+        showMessage({
+          message: '请输入蓝图名称',
+          type: 'warning',
+          duration: 2000
+        })
+      }
+      return
+    }
+    
+    const tab = blueprintStore.createTab(name)
+    showNewBlueprintDialog.value = false
     
     if (showMessage && typeof showMessage === 'function') {
       showMessage({
@@ -270,6 +292,12 @@ export const useBlueprintTabs = () => {
         duration: 2000
       })
     }
+  }
+  
+  // 取消新建蓝图
+  const cancelNewBlueprint = () => {
+    showNewBlueprintDialog.value = false
+    newBlueprintName.value = ''
   }
 
   // 返回的方法对象
@@ -291,6 +319,10 @@ export const useBlueprintTabs = () => {
     projectBlueprintFiles,
     selectedFileUuid,
     
+    // 新建蓝图对话框状态
+    showNewBlueprintDialog,
+    newBlueprintName,
+    
     // 方法
     selectTab,
     closeTab,
@@ -299,6 +331,10 @@ export const useBlueprintTabs = () => {
     // 文件选择方法
     confirmSelectFile,
     cancelSelectFile,
+    
+    // 新建蓝图方法
+    confirmNewBlueprint,
+    cancelNewBlueprint,
     
     // 序列化方法
     newBlueprint,
