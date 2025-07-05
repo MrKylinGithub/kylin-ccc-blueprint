@@ -1,3 +1,9 @@
+// 蓝图类型
+export enum BlueprintType {
+  FUNCTION = 'function',
+  COMPONENT = 'component'
+}
+
 // 节点参数类型
 export interface NodeParam {
   id: string;
@@ -41,6 +47,7 @@ export interface NodeConnection {
 export interface Blueprint {
   id: string;
   name: string;
+  type: BlueprintType;
   nodes: NodeInstance[];
   connections: NodeConnection[];
   variables: { [name: string]: any };

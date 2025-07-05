@@ -54,22 +54,47 @@
     <el-dialog
       v-model="showNewBlueprintDialog"
       title="新建蓝图"
-      width="400px"
+      width="500px"
       :before-close="cancelNewBlueprint"
       center
     >
       <div style="padding: 20px 0;">
-        <p style="margin-bottom: 16px; color: #666;">
-          请输入新蓝图的名称：
-        </p>
+        <div style="margin-bottom: 20px;">
+          <p style="margin-bottom: 8px; color: #666; font-weight: 500;">
+            蓝图类型：
+          </p>
+          <el-radio-group v-model="blueprintType" style="margin-bottom: 16px;">
+            <el-radio value="component" size="large">
+              <div style="display: flex; flex-direction: column; align-items: flex-start;">
+                <span style="font-weight: 500;">组件蓝图</span>
+                <span style="font-size: 12px; color: #999;">
+                  继承 Component，包含生命周期方法
+                </span>
+              </div>
+            </el-radio>
+            <el-radio value="function" size="large">
+              <div style="display: flex; flex-direction: column; align-items: flex-start;">
+                <span style="font-weight: 500;">普通蓝图</span>
+                <span style="font-size: 12px; color: #999;">
+                  普通函数，用于逻辑处理
+                </span>
+              </div>
+            </el-radio>
+          </el-radio-group>
+        </div>
         
-        <el-input
-          v-model="newBlueprintName"
-          placeholder="请输入蓝图名称"
-          maxlength="50"
-          show-word-limit
-          @keyup.enter="confirmNewBlueprint"
-        />
+        <div>
+          <p style="margin-bottom: 8px; color: #666; font-weight: 500;">
+            蓝图名称：
+          </p>
+          <el-input
+            v-model="newBlueprintName"
+            placeholder="请输入蓝图名称"
+            maxlength="50"
+            show-word-limit
+            @keyup.enter="confirmNewBlueprint"
+          />
+        </div>
       </div>
       
       <template #footer>
@@ -154,6 +179,7 @@ const {
   // 新建蓝图对话框状态
   showNewBlueprintDialog,
   newBlueprintName,
+  blueprintType,
   
   // 方法
   selectTab,

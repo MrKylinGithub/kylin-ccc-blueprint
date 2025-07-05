@@ -1,5 +1,6 @@
 import { reactive } from 'vue';
-import type { NodeDefinition, Blueprint, BlueprintTab, NodeInstance, NodeConnection } from '../types/blueprint';
+import type { NodeDefinition, Blueprint, BlueprintTab, NodeInstance, NodeConnection } from '../common/types/blueprint';
+import { BlueprintType } from '../common/types/blueprint';
 
 // 蓝图状态管理
 export const blueprintStore = reactive({
@@ -34,15 +35,52 @@ export const blueprintStore = reactive({
   },
   
   // 创建新蓝图标签页
-  createTab(name: string = '新蓝图') {
+  createTab(name: string = '新蓝图', type: BlueprintType = 'component' as BlueprintType) {
     const id = 'tab_' + Date.now();
     const blueprint: Blueprint = {
       id: 'blueprint_' + Date.now(),
       name,
+      type,
       nodes: [],
       connections: [],
       variables: {}
     };
+    
+    // 为组件蓝图添加生命周期节点
+    if (type === 'component') {
+      const lifecycleNodes = [
+        { id: 'onLoad', position: { x: 100, y: 100 } },
+        { id: 'start', position: { x: 100, y: 200 } },
+        { id: 'update', position: { x: 100, y: 300 } },
+        { id: 'lateUpdate', position: { x: 100, y: 400 } },
+        { id: 'onEnable', position: { x: 400, y: 100 } },
+        { id: 'onDisable', position: { x: 400, y: 200 } },
+        { id: 'onDestroy', position: { x: 400, y: 300 } }
+      ];
+      
+      lifecycleNodes.forEach(({ id: definitionId, position }) => {
+        const node: NodeInstance = {
+          id: 'node_' + Date.now() + '_' + definitionId,
+          definitionId,
+          name: this.nodeDefinitions.find(d => d.id === definitionId)?.name || definitionId,
+          position,
+          inputs: {},
+          outputs: {}
+        };
+        blueprint.nodes.push(node);
+      });
+    } else if (type === 'function') {
+      // 为函数蓝图添加开始节点
+      const startNode: NodeInstance = {
+        id: 'node_' + Date.now() + '_function_start',
+        definitionId: 'function_start',
+        name: '函数开始',
+        position: { x: 100, y: 200 },
+        inputs: {},
+        outputs: {}
+      };
+      blueprint.nodes.push(startNode);
+    }
     
     const tab: BlueprintTab = {
       id,
@@ -223,6 +261,35 @@ export const blueprintStore = reactive({
 
 // 初始化默认的节点定义
 blueprintStore.nodeDefinitions.push(
+  // === 函数参数节点 ===
+  {
+    id: 'function_parameter',
+    name: '函数参数',
+    category: '函数',
+    description: '定义函数的输入参数',
+    inputs: [
+      { id: 'param_name', name: '参数名', type: 'string', defaultValue: 'param' },
+      { id: 'param_type', name: '参数类型', type: 'string', defaultValue: 'any' },
+      { id: 'default_value', name: '默认值', type: 'object', defaultValue: undefined }
+    ],
+    outputs: [
+      { id: 'value', name: '参数值', type: 'object' }
+    ],
+    color: '#9C27B0'
+  },
+  {
+    id: 'function_return',
+    name: '函数返回',
+    category: '函数',
+    description: '定义函数的返回值',
+    inputs: [
+      { id: 'exec', name: '执行', type: 'exec' },
+      { id: 'value', name: '返回值', type: 'object', defaultValue: undefined }
+    ],
+    outputs: [],
+    color: '#E91E63'
+  },
+  
   // === 常量/立即数节点 ===
   {
     id: 'number_constant',
@@ -271,10 +338,10 @@ blueprintStore.nodeDefinitions.push(
 
   // === 事件节点 ===
   {
-    id: 'start',
-    name: '开始',
+    id: 'function_start',
+    name: '函数开始',
     category: '事件',
-    description: '蓝图执行的起始点',
+    description: '函数蓝图执行的起始点',
     inputs: [],
     outputs: [
       { id: 'exec', name: '执行', type: 'exec' }
@@ -319,6 +386,87 @@ blueprintStore.nodeDefinitions.push(
       { id: 'exec', name: '执行完成', type: 'exec' }
     ],
     color: '#9C27B0'
+  },
+
+  // === 组件生命周期节点 ===
+  {
+    id: 'onLoad',
+    name: 'onLoad',
+    category: '生命周期',
+    description: '组件加载时调用，早于 start',
+    inputs: [],
+    outputs: [
+      { id: 'exec', name: '执行', type: 'exec' }
+    ],
+    color: '#FF9800'
+  },
+  {
+    id: 'start',
+    name: 'start',
+    category: '生命周期',
+    description: '组件第一次激活前调用，晚于 onLoad',
+    inputs: [],
+    outputs: [
+      { id: 'exec', name: '执行', type: 'exec' }
+    ],
+    color: '#FF9800'
+  },
+  {
+    id: 'update',
+    name: 'update',
+    category: '生命周期',
+    description: '每帧更新时调用',
+    inputs: [],
+    outputs: [
+      { id: 'exec', name: '执行', type: 'exec' },
+      { id: 'deltaTime', name: '帧间隔时间', type: 'number' }
+    ],
+    color: '#FF9800'
+  },
+  {
+    id: 'lateUpdate',
+    name: 'lateUpdate',
+    category: '生命周期',
+    description: '在所有组件的 update 之后调用',
+    inputs: [],
+    outputs: [
+      { id: 'exec', name: '执行', type: 'exec' },
+      { id: 'deltaTime', name: '帧间隔时间', type: 'number' }
+    ],
+    color: '#FF9800'
+  },
+  {
+    id: 'onEnable',
+    name: 'onEnable',
+    category: '生命周期',
+    description: '组件启用时调用',
+    inputs: [],
+    outputs: [
+      { id: 'exec', name: '执行', type: 'exec' }
+    ],
+    color: '#FF9800'
+  },
+  {
+    id: 'onDisable',
+    name: 'onDisable',
+    category: '生命周期',
+    description: '组件禁用时调用',
+    inputs: [],
+    outputs: [
+      { id: 'exec', name: '执行', type: 'exec' }
+    ],
+    color: '#FF9800'
+  },
+  {
+    id: 'onDestroy',
+    name: 'onDestroy',
+    category: '生命周期',
+    description: '组件被销毁时调用',
+    inputs: [],
+    outputs: [
+      { id: 'exec', name: '执行', type: 'exec' }
+    ],
+    color: '#FF9800'
   },
 
   // === 控制流节点 ===

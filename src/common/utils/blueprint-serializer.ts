@@ -38,7 +38,7 @@ export class BlueprintSerializer {
       }
     }
 
-    return JSON.stringify(serialized, null, 2)
+    return JSON.stringify(serialized, null, 2);
   }
 
   /**
@@ -53,10 +53,10 @@ export class BlueprintSerializer {
         throw new Error('Invalid blueprint format')
       }
 
-      return data
+      return data;
     } catch (error) {
-      console.error('Failed to deserialize blueprint:', error)
-      return null
+      console.error('Failed to deserialize blueprint:', error);
+      return null;
     }
   }
 
@@ -198,10 +198,9 @@ export class BlueprintSerializer {
     // 回退到浏览器下载方式
     const blob = new Blob([json], { type: 'application/json' })
     const url = URL.createObjectURL(blob)
-    
+    const fileName = filename || `${blueprint.name || 'blueprint'}.bp`
     const link = document.createElement('a')
     link.href = url
-    const fileName = filename || `${blueprint.name || 'blueprint'}.bp`
     link.download = fileName
     document.body.appendChild(link)
     link.click()
@@ -487,6 +486,268 @@ export class TypeScriptCodeGenerator {
   }
 
   /**
+   * 生成通用函数库 BP_Functions.ts
+   */
+  static generateBPFunctions(): string {
+    return [
+      '/**',
+      ' * Blueprint Helper Functions',
+      ' * Auto-generated - do not modify manually',
+      ` * Generated at: ${new Date().toISOString()}`,
+      ' */',
+      '',
+      '// Delay function for blueprint timing',
+      'export function delay(ms: number): Promise<void> {',
+      '  return new Promise(resolve => setTimeout(resolve, ms));',
+      '}',
+      '',
+      '// Log function for blueprint debugging',
+      'export function log(value: any): void {',
+      '  console.log(value);',
+      '}',
+      '',
+      '// Math functions',
+      'export function add(a: number, b: number): number {',
+      '  return a + b;',
+      '}',
+      '',
+      'export function subtract(a: number, b: number): number {',
+      '  return a - b;',
+      '}',
+      '',
+      'export function multiply(a: number, b: number): number {',
+      '  return a * b;',
+      '}',
+      '',
+      'export function divide(a: number, b: number): number {',
+      '  return a / b;',
+      '}',
+      '',
+      '// Logic functions',
+      'export function logicAnd(a: boolean, b: boolean): boolean {',
+      '  return a && b;',
+      '}',
+      '',
+      'export function logicOr(a: boolean, b: boolean): boolean {',
+      '  return a || b;',
+      '}',
+      '',
+      'export function logicNot(value: boolean): boolean {',
+      '  return !value;',
+      '}',
+      '',
+      '// Compare functions',
+      'export function equal(a: any, b: any): boolean {',
+      '  return a === b;',
+      '}',
+      '',
+      'export function greater(a: number, b: number): boolean {',
+      '  return a > b;',
+      '}',
+      '',
+      'export function less(a: number, b: number): boolean {',
+      '  return a < b;',
+      '}',
+      '',
+      '// String functions',
+      'export function concat(a: string, b: string): string {',
+      '  return a + b;',
+      '}',
+      '',
+      'export function stringLength(text: string): number {',
+      '  return text.length;',
+      '}',
+      '',
+      'export function contains(text: string, search: string): boolean {',
+      '  return text.includes(search);',
+      '}',
+      '',
+      '// Type conversion functions',
+      'export function toString(value: any): string {',
+      '  return String(value);',
+      '}',
+      '',
+      'export function toNumber(value: string): number {',
+      '  return Number(value);',
+      '}',
+      '',
+      'export function toBoolean(value: any): boolean {',
+      '  return Boolean(value);',
+      '}'
+    ].join('\n')
+  }
+
+  /**
+   * 测试生成BP_Functions.ts（仅用于调试）
+   */
+  static testGenerateBPFunctions(): void {
+    console.log('=== BP_Functions.ts 生成测试 ===')
+    const bpFunctions = TypeScriptCodeGenerator.generateBPFunctions()
+    console.log('生成的BP_Functions.ts内容:')
+    console.log(bpFunctions)
+    console.log('=== 测试完成 ===')
+  }
+
+  /**
+   * 测试修复后的参数和返回值节点代码生成
+   */
+  static testFixedParameterNodes(): void {
+    console.log('=== 修复后的参数和返回值节点测试 ===')
+    
+    // 创建一个更完整的测试蓝图，包含开始节点
+    const testBlueprint: Blueprint = {
+      id: 'test_blueprint_fixed',
+      name: 'FixedTestFunction',
+      type: 'function' as any,
+      variables: {},
+      nodes: [
+        {
+          id: 'start_node',
+          definitionId: 'start',
+          name: '开始',
+          position: { x: 50, y: 100 },
+          inputs: {},
+          outputs: {}
+        },
+        {
+          id: 'param_node',
+          definitionId: 'function_parameter',
+          name: '函数参数',
+          position: { x: 100, y: 100 },
+          inputs: {
+            param_name: 'inputValue',
+            param_type: 'number'
+          },
+          outputs: {}
+        },
+        {
+          id: 'print_node',
+          definitionId: 'print',
+          name: '调试输出',
+          position: { x: 300, y: 100 },
+          inputs: {},
+          outputs: {}
+        },
+        {
+          id: 'return_node',
+          definitionId: 'function_return',
+          name: '函数返回',
+          position: { x: 500, y: 100 },
+          inputs: {},
+          outputs: {}
+        }
+      ],
+      connections: [
+        {
+          id: 'conn1',
+          fromNodeId: 'start_node',
+          fromParamId: 'exec',
+          toNodeId: 'print_node',
+          toParamId: 'exec'
+        },
+        {
+          id: 'conn2',
+          fromNodeId: 'param_node',
+          fromParamId: 'value',
+          toNodeId: 'print_node',
+          toParamId: 'value'
+        },
+        {
+          id: 'conn3',
+          fromNodeId: 'print_node',
+          fromParamId: 'exec',
+          toNodeId: 'return_node',
+          toParamId: 'exec'
+        },
+        {
+          id: 'conn4',
+          fromNodeId: 'param_node',
+          fromParamId: 'value',
+          toNodeId: 'return_node',
+          toParamId: 'value'
+        }
+      ]
+    }
+
+    // 完整的节点定义
+    const testNodeDefinitions: NodeDefinition[] = [
+      {
+        id: 'start',
+        name: '开始',
+        category: '事件',
+        inputs: [],
+        outputs: [
+          { id: 'exec', name: '执行', type: 'exec' }
+        ]
+      },
+      {
+        id: 'function_parameter',
+        name: '函数参数',
+        category: '函数',
+        inputs: [
+          { id: 'param_name', name: '参数名', type: 'string' },
+          { id: 'param_type', name: '参数类型', type: 'string' }
+        ],
+        outputs: [
+          { id: 'value', name: '参数值', type: 'object' }
+        ]
+      },
+      {
+        id: 'print',
+        name: '调试输出',
+        category: '事件',
+        inputs: [
+          { id: 'exec', name: '执行', type: 'exec' },
+          { id: 'value', name: '值', type: 'object' }
+        ],
+        outputs: [
+          { id: 'exec', name: '执行完成', type: 'exec' }
+        ]
+      },
+      {
+        id: 'function_return',
+        name: '函数返回',
+        category: '函数',
+        inputs: [
+          { id: 'exec', name: '执行', type: 'exec' },
+          { id: 'value', name: '返回值', type: 'object' }
+        ],
+        outputs: []
+      }
+    ]
+
+    try {
+      const generator = new TypeScriptCodeGenerator(testBlueprint, testNodeDefinitions)
+      const generatedCode = generator.generateCode()
+      
+      console.log('修复后生成的函数代码:')
+      console.log(generatedCode)
+      
+      console.log('\n期望的输出应该是:')
+      console.log('```typescript')
+      console.log('import { log } from \'./BP_Functions\'')
+      console.log('')
+      console.log('export function BP_FixedTestFunction(inputValue: number): number {')
+      console.log('  // Variables for node outputs')
+      console.log('  let 调试输出_print_node_exec: any')
+      console.log('')
+      console.log('  // Execute blueprint logic')
+      console.log('  // Execute node: 开始 (start_node)')
+      console.log('  // Execute node: 调试输出 (print_node)')
+      console.log('  log(inputValue)  // 直接使用函数参数名，无额外变量')
+      console.log('')
+      console.log('  // Process return values')
+      console.log('  return inputValue  // 直接返回函数参数，无额外变量')
+      console.log('}')
+      console.log('```')
+    } catch (error) {
+      console.error('测试失败:', error)
+    }
+    
+    console.log('=== 测试完成 ===')
+  }
+
+  /**
    * 生成TypeScript函数代码
    */
   generateCode(): string {
@@ -496,8 +757,12 @@ export class TypeScriptCodeGenerator {
     code.push(this.generateHeader())
     code.push('')
     
-    // 生成主函数
-    code.push(this.generateMainFunction())
+    // 根据蓝图类型生成不同的代码
+    if (this.blueprint.type === 'component') {
+      code.push(this.generateComponentClass())
+    } else {
+      code.push(this.generateMainFunction())
+    }
     
     return code.join('\n')
   }
@@ -506,29 +771,57 @@ export class TypeScriptCodeGenerator {
    * 生成文件头部
    */
   private generateHeader(): string {
-    const lines = [
-      '/**',
-      ` * Generated from blueprint: ${this.blueprint.name}`,
-      ` * Generated at: ${new Date().toISOString()}`,
-      ' * Auto-generated - do not modify manually',
-      ' */'
-    ]
+    const lines = []
 
-    // 只生成实际使用的helper函数
+    // 如果是组件蓝图，不需要导入BP_Functions，因为组件方法会直接包含在类中
+    if (this.blueprint.type === 'component') {
+      // 组件蓝图的导入语句会在generateComponentClass中处理
+      return ''
+    }
+
+    // 生成import语句，只导入实际使用的函数（仅适用于普通蓝图）
     if (this.usedHelpers.size > 0) {
-      lines.push('')
-      lines.push('// Helper functions')
-      
-      if (this.usedHelpers.has('delay')) {
-        lines.push('function delay(ms: number): Promise<void> {')
-        lines.push('  return new Promise(resolve => setTimeout(resolve, ms))')
-        lines.push('}')
-      }
+      const imports: string[] = []
       
       if (this.usedHelpers.has('log')) {
-        lines.push('function log(value: any): void {')
-        lines.push('  console.log(value)')
-        lines.push('}')
+        imports.push('log')
+      }
+      if (this.usedHelpers.has('delay')) {
+        imports.push('delay')
+      }
+      if (this.usedHelpers.has('add')) {
+        imports.push('add')
+      }
+      if (this.usedHelpers.has('subtract')) {
+        imports.push('subtract')
+      }
+      if (this.usedHelpers.has('multiply')) {
+        imports.push('multiply')
+      }
+      if (this.usedHelpers.has('divide')) {
+        imports.push('divide')
+      }
+      if (this.usedHelpers.has('logicAnd')) {
+        imports.push('logicAnd')
+      }
+      if (this.usedHelpers.has('logicOr')) {
+        imports.push('logicOr')
+      }
+      if (this.usedHelpers.has('logicNot')) {
+        imports.push('logicNot')
+      }
+      if (this.usedHelpers.has('equal')) {
+        imports.push('equal')
+      }
+      if (this.usedHelpers.has('greater')) {
+        imports.push('greater')
+      }
+      if (this.usedHelpers.has('less')) {
+        imports.push('less')
+      }
+      
+      if (imports.length > 0) {
+        lines.push(`import { ${imports.join(', ')} } from './BP_Functions'`)
       }
     }
 
@@ -544,14 +837,31 @@ export class TypeScriptCodeGenerator {
       const definition = this.getNodeDefinition(node.definitionId)
       if (!definition) continue
 
-      // 分析输入节点
+      // 分析函数参数节点
+      if (definition.id === 'function_parameter') {
+        const paramName = node.inputs?.param_name || 'param'
+        const paramType = node.inputs?.param_type || 'any'
+        this.inputParams.push({ name: paramName, type: paramType })
+        // 函数参数节点不需要生成变量，直接使用参数名
+        continue
+      }
+
+      // 分析函数返回值节点
+      if (definition.id === 'function_return') {
+        const returnType = this.getConnectionType(node.id, 'value') || 'any'
+        this.outputParams.push({ name: 'return', type: returnType })
+        // 函数返回值节点不需要生成变量
+        continue
+      }
+
+      // 分析输入节点（保持向后兼容）
       if (definition.id === 'input') {
         const paramName = node.inputs?.name || 'input'
         const paramType = node.inputs?.type || 'any'
         this.inputParams.push({ name: paramName, type: paramType })
       }
 
-      // 分析输出节点
+      // 分析输出节点（保持向后兼容）
       if (definition.id === 'output') {
         const paramName = node.inputs?.name || 'output'
         const paramType = node.inputs?.type || 'any'
@@ -566,18 +876,145 @@ export class TypeScriptCodeGenerator {
         this.usedHelpers.add('delay')
         this.hasAsyncNodes = true
       }
+      
+      // 数学运算函数
+      if (definition.id === 'add_numbers') {
+        this.usedHelpers.add('add')
+      }
+      if (definition.id === 'subtract_numbers') {
+        this.usedHelpers.add('subtract')
+      }
+      if (definition.id === 'multiply_numbers') {
+        this.usedHelpers.add('multiply')
+      }
+      if (definition.id === 'divide_numbers') {
+        this.usedHelpers.add('divide')
+      }
+      
+      // 逻辑运算函数
+      if (definition.id === 'logic_and') {
+        this.usedHelpers.add('logicAnd')
+      }
+      if (definition.id === 'logic_or') {
+        this.usedHelpers.add('logicOr')
+      }
+      if (definition.id === 'logic_not') {
+        this.usedHelpers.add('logicNot')
+      }
+      
+      // 比较函数
+      if (definition.id === 'compare_equal') {
+        this.usedHelpers.add('equal')
+      }
+      if (definition.id === 'compare_greater') {
+        this.usedHelpers.add('greater')
+      }
+      if (definition.id === 'compare_less') {
+        this.usedHelpers.add('less')
+      }
 
-      // 为节点输出生成变量名
-      for (const output of definition.outputs) {
-        if (output.type !== 'exec') {
-          // 简化变量名生成
-          const baseName = definition.name.toLowerCase().replace(/[^a-z0-9]/g, '')
-          const nodeIndex = node.id.replace(/[^0-9]/g, '')
-          const varName = `${baseName}_${nodeIndex}_${output.id}`
-          this.nodeVariables.set(`${node.id}_${output.id}`, varName)
+      // 为节点输出生成变量名（跳过函数参数和返回值节点）
+      if (definition.id !== 'function_parameter' && definition.id !== 'function_return') {
+        for (const output of definition.outputs) {
+          if (output.type !== 'exec') {
+            // 简化变量名生成
+            const baseName = definition.name.toLowerCase().replace(/[^a-z0-9]/g, '')
+            const nodeIndex = node.id.replace(/[^0-9]/g, '')
+            const varName = `${baseName}_${nodeIndex}_${output.id}`
+            this.nodeVariables.set(`${node.id}_${output.id}`, varName)
+          }
         }
       }
     }
+  }
+
+  /**
+   * 生成组件类代码
+   */
+  private generateComponentClass(): string {
+    const code: string[] = []
+    
+    // 生成导入语句
+    code.push(`import { _decorator, Component, Node } from 'cc';`)
+    code.push(`const { ccclass, property } = _decorator;`)
+    
+    // 如果使用了helper函数，也导入BP_Functions
+    if (this.usedHelpers.size > 0) {
+      const imports: string[] = []
+      
+      if (this.usedHelpers.has('log')) imports.push('log')
+      if (this.usedHelpers.has('delay')) imports.push('delay')
+      if (this.usedHelpers.has('add')) imports.push('add')
+      if (this.usedHelpers.has('subtract')) imports.push('subtract')
+      if (this.usedHelpers.has('multiply')) imports.push('multiply')
+      if (this.usedHelpers.has('divide')) imports.push('divide')
+      if (this.usedHelpers.has('logicAnd')) imports.push('logicAnd')
+      if (this.usedHelpers.has('logicOr')) imports.push('logicOr')
+      if (this.usedHelpers.has('logicNot')) imports.push('logicNot')
+      if (this.usedHelpers.has('equal')) imports.push('equal')
+      if (this.usedHelpers.has('greater')) imports.push('greater')
+      if (this.usedHelpers.has('less')) imports.push('less')
+      
+      if (imports.length > 0) {
+        code.push(`import { ${imports.join(', ')} } from './BP_Functions';`)
+      }
+    }
+    
+    code.push('')
+    
+    // 生成类定义
+    const className = `${this.blueprint.name || 'Component'}Component`
+    code.push(`@ccclass('${className}')`)
+    code.push(`export class ${className} extends Component {`)
+    
+    // 生成变量声明（如果有的话）
+    if (this.nodeVariables.size > 0) {
+      const variables = Array.from(this.nodeVariables.values())
+      variables.forEach(varName => {
+        code.push(`  private ${varName}: any;`)
+      })
+      code.push('')
+    }
+    
+    // 生成生命周期方法
+    const lifecycleMethods = ['onLoad', 'start', 'update', 'lateUpdate', 'onEnable', 'onDisable', 'onDestroy']
+    
+    for (const methodName of lifecycleMethods) {
+      const methodNodes = this.blueprint.nodes.filter(node => 
+        this.getNodeDefinition(node.definitionId)?.id === methodName
+      )
+      
+      if (methodNodes.length > 0) {
+        code.push('')
+        
+        // 生成方法签名
+        if (methodName === 'update' || methodName === 'lateUpdate') {
+          const asyncKeyword = this.hasAsyncNodes ? 'async ' : ''
+          code.push(`  ${asyncKeyword}${methodName}(deltaTime: number): ${this.hasAsyncNodes ? 'Promise<void>' : 'void'} {`)
+        } else {
+          const asyncKeyword = this.hasAsyncNodes ? 'async ' : ''
+          code.push(`  ${asyncKeyword}${methodName}(): ${this.hasAsyncNodes ? 'Promise<void>' : 'void'} {`)
+        }
+        
+        // 生成方法体
+        for (const node of methodNodes) {
+          const nextConnections = this.getExecutionConnections(node.id)
+          for (const connection of nextConnections) {
+            const nextNode = this.nodeMap.get(connection.toNodeId)
+            if (nextNode) {
+              const nodeCode = this.generateNodeExecution(nextNode, new Set())
+              nodeCode.forEach(line => code.push(line))
+            }
+          }
+        }
+        
+        code.push('  }')
+      }
+    }
+    
+    code.push('}')
+    
+    return code.join('\n')
   }
 
   /**
@@ -608,22 +1045,11 @@ export class TypeScriptCodeGenerator {
     const asyncKeyword = isAsync ? 'async ' : ''
     code.push(`export ${asyncKeyword}function ${functionName}(${params}): ${returnType} {`)
     
-    // 生成变量声明
+    // 生成变量声明（只为非函数参数和非返回值节点生成变量）
     if (this.nodeVariables.size > 0) {
-      code.push('  // Variables for node outputs')
       for (const [nodeOutput, varName] of this.nodeVariables) {
         code.push(`  let ${varName}: any`)
       }
-      code.push('')
-    }
-    
-    // 输出变量声明
-    if (this.outputParams.length > 0) {
-      code.push('  // Output variables')
-      for (const param of this.outputParams) {
-        code.push(`  let ${param.name}: ${param.type}`)
-      }
-      code.push('')
     }
     
     // 查找开始节点
@@ -633,26 +1059,47 @@ export class TypeScriptCodeGenerator {
     })
 
     if (startNodes.length === 0) {
-      code.push('  // No start node found')
-      code.push('  console.warn("No start node found in blueprint")')
+      // 如果没有开始节点，执行所有非参数非返回值节点
+      const executableNodes = this.blueprint.nodes.filter(node => {
+        const definition = this.getNodeDefinition(node.definitionId)
+        return definition && definition.id !== 'function_parameter' && definition.id !== 'function_return'
+      })
+      
+      for (const node of executableNodes) {
+        code.push(...this.generateNodeExecution(node))
+      }
     } else {
       // 从开始节点开始执行
-      code.push('  // Execute blueprint logic')
       for (const startNode of startNodes) {
         code.push(...this.generateNodeExecution(startNode))
       }
     }
     
-    // 生成返回语句
-    code.push('')
-    code.push('  // Return results')
-    if (this.outputParams.length === 0) {
-      code.push('  return')
-    } else if (this.outputParams.length === 1) {
-      code.push(`  return ${this.outputParams[0].name}`)
+    // 处理返回值节点
+    const returnNodes = this.blueprint.nodes.filter(node => {
+      const definition = this.getNodeDefinition(node.definitionId)
+      return definition?.id === 'function_return'
+    })
+    
+    if (returnNodes.length > 0) {
+      for (const returnNode of returnNodes) {
+        const valueConnection = this.getInputConnections(returnNode.id, 'value')[0]
+        if (valueConnection) {
+          const returnValue = this.getConnectionValue(valueConnection.fromNodeId, valueConnection.fromParamId)
+          code.push(`  return ${returnValue};`)
+          break // 只处理第一个返回节点
+        }
+      }
     } else {
-      const returnObj = this.outputParams.map(p => `${p.name}`).join(', ')
-      code.push(`  return { ${returnObj} }`)
+      // 生成默认返回语句
+      if (this.outputParams.length === 0) {
+        code.push('  return;')
+      } else if (this.outputParams.length === 1) {
+        code.push(`  return ${this.outputParams[0].name};`)
+      } else {
+        const returnObj = this.outputParams.map(p => `${p.name}`).join(', ')
+        code.push(`  return { ${returnObj} };`)
+      }
     }
     
     code.push('}')
@@ -674,13 +1121,13 @@ export class TypeScriptCodeGenerator {
     const definition = this.getNodeDefinition(node.definitionId)
     
     if (!definition) {
-      code.push(`  // Unknown node type: ${node.definitionId}`)
       return code
     }
-
-    code.push(`  // Execute node: ${definition.name} (${node.id})`)
     
     switch (definition.id) {
+      case 'start':
+        // 开始节点不需要特殊处理，直接执行后续节点
+        break
       case 'constant':
       case 'number_constant':
       case 'string_constant':
@@ -706,6 +1153,12 @@ export class TypeScriptCodeGenerator {
       case 'output':
         code.push(...this.generateOutputNode(node, definition))
         break
+      case 'function_parameter':
+        // 函数参数节点已经在函数开始时初始化，这里跳过
+        break
+      case 'function_return':
+        // 函数返回节点在函数末尾统一处理，这里跳过
+        break
       case 'add_numbers':
       case 'subtract_numbers':
       case 'multiply_numbers':
@@ -723,7 +1176,8 @@ export class TypeScriptCodeGenerator {
         code.push(...this.generateCompareNode(node, definition))
         break
       default:
-        code.push(`  // Unsupported node type: ${definition.id}`)
+        // 不支持的节点类型，跳过
+        break
     }
 
     // 执行后续节点
@@ -749,7 +1203,7 @@ export class TypeScriptCodeGenerator {
     if (outputParam) {
       const varName = this.nodeVariables.get(`${node.id}_${outputParam.id}`)
       if (varName) {
-        code.push(`  ${varName} = ${JSON.stringify(value)}`)
+        code.push(`  ${varName} = ${JSON.stringify(value)};`)
       }
     }
     
@@ -768,12 +1222,10 @@ export class TypeScriptCodeGenerator {
       const inputConnections = this.getInputConnections(node.id, inputParam.id)
       if (inputConnections.length > 0) {
         const connection = inputConnections[0]
-        const varName = this.nodeVariables.get(`${connection.fromNodeId}_${connection.fromParamId}`)
-        if (varName) {
-          code.push(`  log(${varName})`)
-        }
+        const value = this.getConnectionValue(connection.fromNodeId, connection.fromParamId)
+        code.push(`  log(${value});`)
       } else {
-        code.push(`  log('${node.inputs?.message || 'Hello World'}')`)
+        code.push(`  log('${node.inputs?.message || 'Hello World'}');`)
       }
     }
     
@@ -786,7 +1238,7 @@ export class TypeScriptCodeGenerator {
   private generateDelayNode(node: NodeInstance, definition: NodeDefinition): string[] {
     const code: string[] = []
     const duration = node.inputs?.duration || 1000
-    code.push(`  await delay(${duration})`)
+    code.push(`  await delay(${duration});`)
     return code
   }
 
@@ -803,7 +1255,6 @@ export class TypeScriptCodeGenerator {
         for (const connection of connections) {
           const nextNode = this.nodeMap.get(connection.toNodeId)
           if (nextNode && !visitedNodes.has(nextNode.id)) {
-            code.push(`  // Sequence output: ${output.name}`)
             code.push(...this.generateNodeExecution(nextNode, new Set(visitedNodes)))
           }
         }
@@ -833,15 +1284,14 @@ export class TypeScriptCodeGenerator {
             
             code.push(`  const ${taskName} = async () => {`)
             code.push(...this.generateNodeExecution(nextNode, new Set(visitedNodes)).map(line => '  ' + line))
-            code.push('  }')
+            code.push('  };')
           }
         }
       }
     }
 
     if (parallelTasks.length > 0) {
-      code.push(`  // Parallel execution`)
-      code.push(`  await Promise.all([${parallelTasks.join(', ')}].map(task => task()))`)
+      code.push(`  await Promise.all([${parallelTasks.join(', ')}].map(task => task()));`)
     }
 
     return code
@@ -858,7 +1308,7 @@ export class TypeScriptCodeGenerator {
     if (outputParam) {
       const varName = this.nodeVariables.get(`${node.id}_${outputParam.id}`)
       if (varName) {
-        code.push(`  ${varName} = ${paramName}`)
+        code.push(`  ${varName} = ${paramName};`)
       }
     }
     
@@ -878,12 +1328,10 @@ export class TypeScriptCodeGenerator {
       const inputConnections = this.getInputConnections(node.id, inputParam.id)
       if (inputConnections.length > 0) {
         const connection = inputConnections[0]
-        const varName = this.nodeVariables.get(`${connection.fromNodeId}_${connection.fromParamId}`)
-        if (varName) {
-          code.push(`  ${paramName} = ${varName}`)
-        }
+        const value = this.getConnectionValue(connection.fromNodeId, connection.fromParamId)
+        code.push(`  ${paramName} = ${value};`)
       } else {
-        code.push(`  ${paramName} = undefined`)
+        code.push(`  ${paramName} = undefined;`)
       }
     }
     
@@ -955,21 +1403,21 @@ export class TypeScriptCodeGenerator {
         const bConnection = this.getInputConnections(node.id, 'b')[0]
         
         const aValue = aConnection ? 
-          this.nodeVariables.get(`${aConnection.fromNodeId}_${aConnection.fromParamId}`) || '0' : 
+          this.getConnectionValue(aConnection.fromNodeId, aConnection.fromParamId) : 
           (node.inputs?.a || 0)
         const bValue = bConnection ? 
-          this.nodeVariables.get(`${bConnection.fromNodeId}_${bConnection.fromParamId}`) || '0' : 
+          this.getConnectionValue(bConnection.fromNodeId, bConnection.fromParamId) : 
           (node.inputs?.b || 0)
         
-        let operator = '+'
+        let functionName = 'add'
         switch (definition.id) {
-          case 'add_numbers': operator = '+'; break
-          case 'subtract_numbers': operator = '-'; break
-          case 'multiply_numbers': operator = '*'; break
-          case 'divide_numbers': operator = '/'; break
+          case 'add_numbers': functionName = 'add'; break
+          case 'subtract_numbers': functionName = 'subtract'; break
+          case 'multiply_numbers': functionName = 'multiply'; break
+          case 'divide_numbers': functionName = 'divide'; break
         }
         
-        code.push(`  ${varName} = ${aValue} ${operator} ${bValue}`)
+        code.push(`  ${varName} = ${functionName}(${aValue}, ${bValue});`)
       }
     }
     
@@ -989,22 +1437,22 @@ export class TypeScriptCodeGenerator {
         if (definition.id === 'logic_not') {
           const valueConnection = this.getInputConnections(node.id, 'value')[0]
           const value = valueConnection ? 
-            this.nodeVariables.get(`${valueConnection.fromNodeId}_${valueConnection.fromParamId}`) || 'false' : 
+            this.getConnectionValue(valueConnection.fromNodeId, valueConnection.fromParamId) : 
             (node.inputs?.value || false)
-          code.push(`  ${varName} = !${value}`)
+          code.push(`  ${varName} = logicNot(${value});`)
         } else {
           const aConnection = this.getInputConnections(node.id, 'a')[0]
           const bConnection = this.getInputConnections(node.id, 'b')[0]
           
           const aValue = aConnection ? 
-            this.nodeVariables.get(`${aConnection.fromNodeId}_${aConnection.fromParamId}`) || 'false' : 
+            this.getConnectionValue(aConnection.fromNodeId, aConnection.fromParamId) : 
             (node.inputs?.a || false)
           const bValue = bConnection ? 
-            this.nodeVariables.get(`${bConnection.fromNodeId}_${bConnection.fromParamId}`) || 'false' : 
+            this.getConnectionValue(bConnection.fromNodeId, bConnection.fromParamId) : 
             (node.inputs?.b || false)
           
-          const operator = definition.id === 'logic_and' ? '&&' : '||'
-          code.push(`  ${varName} = ${aValue} ${operator} ${bValue}`)
+          const functionName = definition.id === 'logic_and' ? 'logicAnd' : 'logicOr'
+          code.push(`  ${varName} = ${functionName}(${aValue}, ${bValue});`)
         }
       }
     }
@@ -1026,20 +1474,77 @@ export class TypeScriptCodeGenerator {
         const bConnection = this.getInputConnections(node.id, 'b')[0]
         
         const aValue = aConnection ? 
-          this.nodeVariables.get(`${aConnection.fromNodeId}_${aConnection.fromParamId}`) || '0' : 
+          this.getConnectionValue(aConnection.fromNodeId, aConnection.fromParamId) : 
           (node.inputs?.a || 0)
         const bValue = bConnection ? 
-          this.nodeVariables.get(`${bConnection.fromNodeId}_${bConnection.fromParamId}`) || '0' : 
+          this.getConnectionValue(bConnection.fromNodeId, bConnection.fromParamId) : 
           (node.inputs?.b || 0)
         
-        let operator = '==='
+        let functionName = 'equal'
         switch (definition.id) {
-          case 'compare_equal': operator = '==='; break
-          case 'compare_greater': operator = '>'; break
-          case 'compare_less': operator = '<'; break
+          case 'compare_equal': functionName = 'equal'; break
+          case 'compare_greater': functionName = 'greater'; break
+          case 'compare_less': functionName = 'less'; break
         }
         
-        code.push(`  ${varName} = ${aValue} ${operator} ${bValue}`)
+        code.push(`  ${varName} = ${functionName}(${aValue}, ${bValue});`)
+      }
+    }
+    
+    return code
+  }
+
+  /**
+   * 获取连接到指定节点输入的连接类型
+   */
+  private getConnectionType(nodeId: string, paramId: string): string | undefined {
+    const connections = this.getInputConnections(nodeId, paramId)
+    if (connections.length === 0) return undefined
+    
+    const connection = connections[0]
+    const sourceNode = this.nodeMap.get(connection.fromNodeId)
+    if (!sourceNode) return undefined
+    
+    const sourceDefinition = this.getNodeDefinition(sourceNode.definitionId)
+    if (!sourceDefinition) return undefined
+    
+    const sourceOutput = sourceDefinition.outputs.find(o => o.id === connection.fromParamId)
+    return sourceOutput?.type
+  }
+
+  /**
+   * 获取连接的值（函数参数节点直接返回参数名，其他节点返回变量名）
+   */
+  private getConnectionValue(fromNodeId: string, fromParamId: string): string {
+    const sourceNode = this.nodeMap.get(fromNodeId)
+    if (!sourceNode) return 'undefined'
+    
+    const sourceDefinition = this.getNodeDefinition(sourceNode.definitionId)
+    if (!sourceDefinition) return 'undefined'
+    
+    // 如果是函数参数节点，直接返回参数名
+    if (sourceDefinition.id === 'function_parameter') {
+      return sourceNode.inputs?.param_name || 'param'
+    }
+    
+    // 其他节点返回生成的变量名
+    const varName = this.nodeVariables.get(`${fromNodeId}_${fromParamId}`)
+    return varName || 'undefined'
+  }
+
+  /**
+   * 生成函数返回节点代码
+   */
+  private generateReturnNode(node: NodeInstance, definition: NodeDefinition): string[] {
+    const code: string[] = []
+    const inputParam = definition.inputs.find(i => i.type !== 'exec')
+    
+    if (inputParam) {
+      const inputConnections = this.getInputConnections(node.id, inputParam.id)
+      if (inputConnections.length > 0) {
+        const connection = inputConnections[0]
+        const value = this.getConnectionValue(connection.fromNodeId, connection.fromParamId)
+        code.push(`  return ${value};`)
       }
     }
     
@@ -1051,6 +1556,7 @@ export class TypeScriptCodeGenerator {
    */
   async downloadCode(filename?: string): Promise<string> {
     const code = this.generateCode()
+    const bpFunctionsCode = TypeScriptCodeGenerator.generateBPFunctions()
     
     // 检查是否在 Electron 环境中（Cocos Creator 基于 Electron）
     const isElectron = typeof window !== 'undefined' && window.process && window.process.versions && window.process.versions.electron
@@ -1070,101 +1576,71 @@ export class TypeScriptCodeGenerator {
           const Editor = (window as any).Editor
           const fileName = filename || `BP_${this.blueprint.name || 'Blueprint'}.ts`
           
-          // 创建资源 URL，保存到 assets 目录
+          // 首先保存 BP_Functions.ts
+          const bpFunctionsUrl = `db://assets/scripts/BP_Functions.ts`
+          console.log('创建 BP_Functions.ts 资源:', bpFunctionsUrl)
+          
+                     try {
+             // 先检查资源是否存在
+             let bpFunctionsExists = false
+             try {
+               const existingAsset = await Editor.Message.request('asset-db', 'query-asset-info', bpFunctionsUrl)
+               bpFunctionsExists = !!(existingAsset && existingAsset.uuid)
+               console.log('BP_Functions.ts 资源是否存在:', bpFunctionsExists)
+             } catch (error) {
+               console.log('检查 BP_Functions.ts 资源存在性失败:', error)
+             }
+             
+             if (bpFunctionsExists) {
+               // 资源存在，直接更新
+               const bpFunctionsSaveResult = await Editor.Message.request('asset-db', 'save-asset', bpFunctionsUrl, bpFunctionsCode)
+               console.log('BP_Functions.ts 更新结果:', bpFunctionsSaveResult)
+             } else {
+               // 资源不存在，创建新资源
+               const bpFunctionsResult = await Editor.Message.request('asset-db', 'create-asset', bpFunctionsUrl, bpFunctionsCode)
+               console.log('BP_Functions.ts 创建结果:', bpFunctionsResult)
+             }
+           } catch (error) {
+             console.warn('BP_Functions.ts 保存失败:', error)
+           }
+          
+          // 然后保存蓝图函数
           const assetUrl = `db://assets/scripts/${fileName}`
+          console.log('处理蓝图函数资源:', assetUrl)
           
-          console.log('创建 TypeScript 资源:', assetUrl)
-          const result = await Editor.Message.request('asset-db', 'create-asset', assetUrl, code)
-          console.log('Cocos Creator 资源创建结果:', result)
-          
-          if (result && result.uuid) {
-            console.log('TypeScript 代码已保存到项目资源:', assetUrl)
-            return assetUrl
+          // 先检查蓝图函数资源是否存在
+          let blueprintExists = false
+          try {
+            const existingAsset = await Editor.Message.request('asset-db', 'query-asset-info', assetUrl)
+            blueprintExists = !!(existingAsset && existingAsset.uuid)
+            console.log('蓝图函数资源是否存在:', blueprintExists)
+          } catch (error) {
+            console.log('检查蓝图函数资源存在性失败:', error)
           }
           
-          console.log('资源创建失败，尝试更新现有资源...')
-          
-          // 如果创建失败，尝试保存到现有资源
-          const saveResult = await Editor.Message.request('asset-db', 'save-asset', assetUrl, code)
-          console.log('Cocos Creator 资源保存结果:', saveResult)
-          
-          if (saveResult) {
-            console.log('TypeScript 代码已更新到项目资源:', assetUrl)
-            return assetUrl
+          if (blueprintExists) {
+            // 资源存在，直接更新
+            const saveResult = await Editor.Message.request('asset-db', 'save-asset', assetUrl, code)
+            console.log('蓝图函数更新结果:', saveResult)
+            
+            if (saveResult) {
+              console.log('TypeScript 代码已更新到项目资源:', assetUrl)
+              return assetUrl
+            }
+          } else {
+            // 资源不存在，创建新资源
+            const result = await Editor.Message.request('asset-db', 'create-asset', assetUrl, code)
+            console.log('蓝图函数创建结果:', result)
+            
+            if (result && result.uuid) {
+              console.log('TypeScript 代码已保存到项目资源:', assetUrl)
+              return assetUrl
+            }
           }
-          
         } catch (error) {
           console.warn('Cocos Creator Editor.Message API 调用失败:', error)
         }
       }
-      
-      try {
-        console.log('尝试使用 Electron 文件对话框...')
-        
-        // 在渲染进程中，尝试使用 IPC 或预加载的 API
-        let saveResult = null
-        
-        // 方式2: 检查是否有预加载的 electronAPI
-        if (typeof (window as any).electronAPI !== 'undefined') {
-          console.log('尝试使用 electronAPI')
-          try {
-            const electronAPI = (window as any).electronAPI
-            if (electronAPI.saveFile) {
-              const defaultFileName = filename || `BP_${this.blueprint.name || 'Blueprint'}.ts`
-              saveResult = await electronAPI.saveFile({
-                title: '保存TypeScript代码',
-                defaultPath: defaultFileName,
-                filters: [
-                  { name: 'TypeScript文件', extensions: ['ts'] },
-                  { name: '所有文件', extensions: ['*'] }
-                ],
-                content: code
-              })
-              console.log('electronAPI 保存结果:', saveResult)
-            }
-          } catch (e: any) {
-            console.log('electronAPI 不可用:', e.message)
-          }
-        }
-        
-        // 方式3: 检查是否有 ipcRenderer
-        if (!saveResult && typeof (window as any).electron !== 'undefined') {
-          console.log('尝试使用 ipcRenderer')
-          try {
-            const { ipcRenderer } = (window as any).electron
-            if (ipcRenderer) {
-              const defaultFileName = filename || `BP_${this.blueprint.name || 'Blueprint'}.ts`
-              saveResult = await ipcRenderer.invoke('save-file', {
-                title: '保存TypeScript代码',
-                defaultPath: defaultFileName,
-                filters: [
-                  { name: 'TypeScript文件', extensions: ['ts'] },
-                  { name: '所有文件', extensions: ['*'] }
-                ],
-                content: code
-              })
-              console.log('ipcRenderer 保存结果:', saveResult)
-            }
-          } catch (e: any) {
-            console.log('ipcRenderer 不可用:', e.message)
-          }
-        }
-        
-        if (saveResult && !saveResult.canceled) {
-          return saveResult.filePath || saveResult
-        }
-        
-        if (saveResult && saveResult.canceled) {
-          return '' // 用户取消了保存
-        }
-        
-        console.log('无法找到可用的 Electron 文件对话框 API')
-      } catch (error) {
-        console.warn('无法使用 Electron 文件对话框，回退到浏览器下载:', error)
-        // 回退到浏览器下载
-      }
-    } else {
-      console.log('不在 Electron 环境中，使用浏览器下载')
     }
     
     // 回退到浏览器下载方式
@@ -1172,46 +1648,33 @@ export class TypeScriptCodeGenerator {
     try {
       const fileName = filename || `BP_${this.blueprint.name || 'Blueprint'}.ts`
       
-      // 在 Electron 环境中，尝试使用 data URI 替代 blob URL
-      if (isElectron) {
-        console.log('在 Electron 环境中使用 data URI 下载')
-        const dataUri = `data:text/typescript;charset=utf-8,${encodeURIComponent(code)}`
-        const link = document.createElement('a')
-        link.href = dataUri
-        link.download = fileName
-        document.body.appendChild(link)
-        link.click()
-        document.body.removeChild(link)
-        console.log('data URI 下载完成')
-        return fileName
-      } else {
-        console.log('使用 blob URL 下载')
-        const blob = new Blob([code], { type: 'text/typescript' })
-        const url = URL.createObjectURL(blob)
-        
-        const link = document.createElement('a')
-        link.href = url
-        link.download = fileName
-        document.body.appendChild(link)
-        link.click()
-        document.body.removeChild(link)
-        
-        URL.revokeObjectURL(url)
-        console.log('blob URL 下载完成')
-        return fileName
-      }
+      // 下载 BP_Functions.ts
+      const bpFunctionsBlob = new Blob([bpFunctionsCode], { type: 'text/typescript' })
+      const bpFunctionsUrl = URL.createObjectURL(bpFunctionsBlob)
+      const bpFunctionsLink = document.createElement('a')
+      bpFunctionsLink.href = bpFunctionsUrl
+      bpFunctionsLink.download = 'BP_Functions.ts'
+      document.body.appendChild(bpFunctionsLink)
+      bpFunctionsLink.click()
+      document.body.removeChild(bpFunctionsLink)
+      URL.revokeObjectURL(bpFunctionsUrl)
+      console.log('BP_Functions.ts 下载完成')
+      
+      // 下载蓝图函数
+      const blob = new Blob([code], { type: 'text/typescript' })
+      const url = URL.createObjectURL(blob)
+      const link = document.createElement('a')
+      link.href = url
+      link.download = fileName
+      document.body.appendChild(link)
+      link.click()
+      document.body.removeChild(link)
+      URL.revokeObjectURL(url)
+      console.log('蓝图函数下载完成')
+      return fileName
     } catch (error) {
       console.error('浏览器下载失败:', error)
-      
-      // 最终回退：直接复制到剪贴板
-      try {
-        await navigator.clipboard.writeText(code)
-        console.log('已复制TypeScript代码到剪贴板')
-        return '已复制到剪贴板'
-      } catch (clipboardError) {
-        console.error('复制到剪贴板也失败:', clipboardError)
-        throw new Error('下载失败，请手动复制代码')
-      }
+      throw new Error('下载失败，请手动复制代码')
     }
   }
-} 
+}

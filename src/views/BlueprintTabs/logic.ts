@@ -1,6 +1,7 @@
 import { computed, ref, inject } from 'vue'
 import { ElMessageBox } from 'element-plus'
 import { blueprintStore } from '../../stores/blueprint'
+import { BlueprintType } from '../../common/types/blueprint'
 import { keyMessage } from '../../panels/provide-inject'
 import { BlueprintSerializer, TypeScriptCodeGenerator } from '../../common/utils/blueprint-serializer'
 import type { TabMethods } from './types'
@@ -21,6 +22,7 @@ export const useBlueprintTabs = () => {
   // 新建蓝图对话框相关
   const showNewBlueprintDialog = ref(false)
   const newBlueprintName = ref('')
+  const blueprintType = ref<BlueprintType>(BlueprintType.COMPONENT)
 
 
 
@@ -265,6 +267,7 @@ export const useBlueprintTabs = () => {
   // 新建蓝图
   const newBlueprint = () => {
     newBlueprintName.value = ''
+    blueprintType.value = BlueprintType.COMPONENT
     showNewBlueprintDialog.value = true
   }
   
@@ -282,12 +285,13 @@ export const useBlueprintTabs = () => {
       return
     }
     
-    const tab = blueprintStore.createTab(name)
+    const tab = blueprintStore.createTab(name, blueprintType.value)
     showNewBlueprintDialog.value = false
     
     if (showMessage && typeof showMessage === 'function') {
+      const typeText = blueprintType.value === BlueprintType.COMPONENT ? '组件蓝图' : '普通蓝图'
       showMessage({
-        message: `已创建新蓝图 "${tab.name}"`,
+        message: `已创建新${typeText} "${tab.name}"`,
         type: 'success',
         duration: 2000
       })
@@ -298,6 +302,7 @@ export const useBlueprintTabs = () => {
   const cancelNewBlueprint = () => {
     showNewBlueprintDialog.value = false
     newBlueprintName.value = ''
+    blueprintType.value = BlueprintType.COMPONENT
   }
 
   // 返回的方法对象
@@ -322,6 +327,7 @@ export const useBlueprintTabs = () => {
     // 新建蓝图对话框状态
     showNewBlueprintDialog,
     newBlueprintName,
+    blueprintType,
     
     // 方法
     selectTab,
