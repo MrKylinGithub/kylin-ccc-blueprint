@@ -141,7 +141,7 @@ export const useBlueprintTabs = () => {
       const url = URL.createObjectURL(blob)
       const a = document.createElement('a')
       a.href = url
-      a.download = `${activeTab.name}.json`
+      a.download = `${activeTab.name}.bp`
       a.click()
       URL.revokeObjectURL(url)
       
@@ -159,7 +159,7 @@ export const useBlueprintTabs = () => {
   const importBlueprint = () => {
     const input = document.createElement('input')
     input.type = 'file'
-    input.accept = '.json'
+    input.accept = '.bp,.json'
     input.onchange = (e) => {
       const file = (e.target as HTMLInputElement).files?.[0]
       if (file) {
@@ -197,7 +197,7 @@ export const useBlueprintTabs = () => {
   // 获取当前活跃标签页
   const activeTab = computed(() => blueprintStore.activeTab)
 
-  // 保存蓝图为JSON文件
+  // 保存蓝图为BP文件
   const saveBlueprint = async () => {
     const tab = activeTab.value
     if (!tab) {
@@ -215,7 +215,7 @@ export const useBlueprintTabs = () => {
       const filePath = await BlueprintSerializer.downloadBlueprint(
         tab.blueprint,
         blueprintStore.nodeDefinitions,
-        `${tab.name}.json`
+        `${tab.name}.bp`
       )
       
       if (filePath) {
