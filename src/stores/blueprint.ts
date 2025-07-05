@@ -409,7 +409,7 @@ blueprintStore.nodeDefinitions.push(
   {
     id: 'onLoad',
     name: 'onLoad',
-    category: '生命周期',
+    category: '组件相关',
     description: '组件加载时调用，早于 start',
     inputs: [],
     outputs: [
@@ -420,7 +420,7 @@ blueprintStore.nodeDefinitions.push(
   {
     id: 'start',
     name: 'start',
-    category: '生命周期',
+    category: '组件相关',
     description: '组件第一次激活前调用，晚于 onLoad',
     inputs: [],
     outputs: [
@@ -431,7 +431,7 @@ blueprintStore.nodeDefinitions.push(
   {
     id: 'update',
     name: 'update',
-    category: '生命周期',
+    category: '组件相关',
     description: '每帧更新时调用',
     inputs: [],
     outputs: [
@@ -443,7 +443,7 @@ blueprintStore.nodeDefinitions.push(
   {
     id: 'lateUpdate',
     name: 'lateUpdate',
-    category: '生命周期',
+    category: '组件相关',
     description: '在所有组件的 update 之后调用',
     inputs: [],
     outputs: [
@@ -455,7 +455,7 @@ blueprintStore.nodeDefinitions.push(
   {
     id: 'onEnable',
     name: 'onEnable',
-    category: '生命周期',
+    category: '组件相关',
     description: '组件启用时调用',
     inputs: [],
     outputs: [
@@ -466,7 +466,7 @@ blueprintStore.nodeDefinitions.push(
   {
     id: 'onDisable',
     name: 'onDisable',
-    category: '生命周期',
+    category: '组件相关',
     description: '组件禁用时调用',
     inputs: [],
     outputs: [
@@ -477,7 +477,7 @@ blueprintStore.nodeDefinitions.push(
   {
     id: 'onDestroy',
     name: 'onDestroy',
-    category: '生命周期',
+    category: '组件相关',
     description: '组件被销毁时调用',
     inputs: [],
     outputs: [
@@ -830,7 +830,7 @@ blueprintStore.nodeDefinitions.push(
   {
     id: 'component_property',
     name: '组件属性',
-    category: '组件',
+    category: '组件相关',
     description: '声明组件的属性，将在检查器面板中显示',
     inputs: [
       { id: 'name', name: '属性名', type: 'string', defaultValue: 'myProperty', noPort: true },
