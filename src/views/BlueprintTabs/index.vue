@@ -90,7 +90,6 @@
       v-model="showFileSelectDialog"
       title="选择蓝图文件"
       width="60%"
-      height="1100px"
       :before-close="cancelSelectFile"
       center
       class="file-select-dialog"

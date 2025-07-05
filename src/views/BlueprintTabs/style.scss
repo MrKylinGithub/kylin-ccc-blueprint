@@ -131,11 +131,13 @@
 }
 
 .empty-state {
-  height: 100%;
+  text-align: center;
+  color: $color-text-light;
+  padding: 40px 20px;
+  flex: 1;
   display: flex;
   align-items: center;
   justify-content: center;
-  background: $color-bg-dark;
 }
 
 .empty-content {
@@ -181,7 +183,8 @@
 
 /* 文件选择对话框样式 */
 .file-list-container {
-  max-height: 900px;
+  flex: 1;
+  max-height: none;
   overflow-y: auto;
   border: 1px solid $color-border;
   border-radius: 6px;
@@ -257,19 +260,28 @@
   word-break: break-all;
 }
 
-.empty-state {
-  text-align: center;
-  color: $color-text-light;
-  padding: 40px 20px;
-}
-
-
-
 /* 对话框尺寸调整 */
 :deep(.el-dialog) {
   &.file-select-dialog {
+    height: 80vh !important;
+    max-height: 1100px !important;
+    
     .el-dialog__header {
       border-bottom: 1px solid $color-border;
+    }
+    
+    .el-dialog__body {
+      height: calc(100% - 120px) !important;
+      max-height: calc(1100px - 120px) !important;
+      overflow: hidden !important;
+      display: flex !important;
+      flex-direction: column !important;
+      
+      > div {
+        display: flex;
+        flex-direction: column;
+        height: 100%;
+      }
     }
   }
 }
