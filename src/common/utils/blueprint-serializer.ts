@@ -99,7 +99,7 @@ export class BlueprintSerializer {
           const fileName = filename || `${blueprint.name || 'blueprint'}.bp`
           
           // 检查并获取 blueprints 目录路径
-          const blueprintsPath = await Editor.Message.request('asset-db', 'query-path', 'assets/blueprints')
+          const blueprintsPath = await Editor.Message.request('asset-db', 'query-path', 'db://assets/blueprints')
           console.log('blueprints 目录路径:', blueprintsPath)
           
           // 创建资源 URL，保存到 assets/blueprints 目录，使用 .bp 扩展名
@@ -226,7 +226,7 @@ export class BlueprintSerializer {
           const Editor = (window as any).Editor
           
           // 获取 blueprints 目录的绝对路径
-          const blueprintsPath = await Editor.Message.request('asset-db', 'query-path', 'assets/blueprints')
+          const blueprintsPath = await Editor.Message.request('asset-db', 'query-path', 'db://assets/blueprints')
           console.log('blueprints 目录路径:', blueprintsPath)
           
           if (blueprintsPath) {
