@@ -154,6 +154,16 @@ export const blueprintStore = reactive({
       node.inputs.value = '';
     }
     
+    // 为组件属性节点设置默认值
+    if (definitionId === 'component_property') {
+      node.inputs.name = 'myProperty';
+      node.inputs.type = 'string';
+      node.inputs.defaultValue = '';
+      node.inputs.displayName = '';
+      node.inputs.tooltip = '';
+      node.inputs.visible = true;
+    }
+    
     blueprint.nodes.push(node);
     this.markTabDirty(this.activeTabId);
     return node;
@@ -814,6 +824,26 @@ blueprintStore.nodeDefinitions.push(
       { id: 'exec', name: '执行', type: 'exec' }
     ],
     color: '#673AB7'
+  },
+  
+  // === 组件属性节点 ===
+  {
+    id: 'component_property',
+    name: '组件属性',
+    category: '组件',
+    description: '声明组件的属性，将在检查器面板中显示',
+    inputs: [
+      { id: 'name', name: '属性名', type: 'string', defaultValue: 'myProperty', noPort: true },
+      { id: 'type', name: '属性类型', type: 'select', defaultValue: 'string', options: ['string', 'number', 'boolean', 'Node', 'Prefab', 'Material', 'SpriteFrame', 'AudioClip'], noPort: true },
+      { id: 'defaultValue', name: '默认值', type: 'string', defaultValue: '', noPort: true },
+      { id: 'displayName', name: '显示名称', type: 'string', defaultValue: '', noPort: true },
+      { id: 'tooltip', name: '提示信息', type: 'string', defaultValue: '', noPort: true },
+      { id: 'visible', name: '是否可见', type: 'boolean', defaultValue: true, noPort: true }
+    ],
+    outputs: [
+      { id: 'value', name: '属性值', type: 'object' }
+    ],
+    color: '#8BC34A'
   },
 
   // === 类型转换节点 ===

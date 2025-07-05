@@ -913,8 +913,8 @@ export class TypeScriptCodeGenerator {
         this.usedHelpers.add('less')
       }
 
-      // 为节点输出生成变量名（跳过函数参数和返回值节点）
-      if (definition.id !== 'function_parameter' && definition.id !== 'function_return') {
+      // 为节点输出生成变量名（跳过函数参数、返回值和组件属性节点）
+      if (definition.id !== 'function_parameter' && definition.id !== 'function_return' && definition.id !== 'component_property') {
         for (const output of definition.outputs) {
           if (output.type !== 'exec') {
             // 简化变量名生成
@@ -934,8 +934,23 @@ export class TypeScriptCodeGenerator {
   private generateComponentClass(): string {
     const code: string[] = []
     
+    // 获取组件属性节点
+    const propertyNodes = this.blueprint.nodes.filter(node => 
+      this.getNodeDefinition(node.definitionId)?.id === 'component_property'
+    )
+    
+    // 检查需要导入的 Cocos Creator 类型
+    const neededTypes = new Set(['_decorator', 'Component', 'Node'])
+    propertyNodes.forEach(node => {
+      const propType = node.inputs?.type
+      if (propType && ['Prefab', 'Material', 'SpriteFrame', 'AudioClip'].includes(propType)) {
+        neededTypes.add(propType)
+      }
+    })
+    
     // 生成导入语句
-    code.push(`import { _decorator, Component, Node } from 'cc';`)
+    const importTypes = Array.from(neededTypes).sort()
+    code.push(`import { ${importTypes.join(', ')} } from 'cc';`)
     code.push(`const { ccclass, property } = _decorator;`)
     
     // 如果使用了helper函数，也导入BP_Functions
@@ -966,6 +981,99 @@ export class TypeScriptCodeGenerator {
     const className = `${this.blueprint.name || 'Component'}Component`
     code.push(`@ccclass('${className}')`)
     code.push(`export class ${className} extends Component {`)
+    
+    // 生成组件属性声明
+    
+    if (propertyNodes.length > 0) {
+      propertyNodes.forEach(node => {
+        const propName = node.inputs?.name || 'myProperty'
+        const propType = node.inputs?.type || 'string'
+        const defaultValue = node.inputs?.defaultValue || ''
+        const displayName = node.inputs?.displayName || ''
+        const tooltip = node.inputs?.tooltip || ''
+        const visible = node.inputs?.visible !== false
+        
+        // 生成 @property 装饰器
+        const propertyOptions: string[] = []
+        
+        // 添加类型
+        if (propType === 'Node') {
+          propertyOptions.push('type: Node')
+        } else if (propType === 'Prefab') {
+          propertyOptions.push('type: Prefab')
+        } else if (propType === 'Material') {
+          propertyOptions.push('type: Material')
+        } else if (propType === 'SpriteFrame') {
+          propertyOptions.push('type: SpriteFrame')
+        } else if (propType === 'AudioClip') {
+          propertyOptions.push('type: AudioClip')
+        }
+        
+        // 添加显示名称
+        if (displayName) {
+          propertyOptions.push(`displayName: '${displayName}'`)
+        }
+        
+        // 添加提示信息
+        if (tooltip) {
+          propertyOptions.push(`tooltip: '${tooltip}'`)
+        }
+        
+        // 添加可见性
+        if (!visible) {
+          propertyOptions.push('visible: false')
+        }
+        
+        // 生成属性装饰器和声明
+        if (propertyOptions.length > 0) {
+          code.push(`  @property({ ${propertyOptions.join(', ')} })`)
+        } else {
+          code.push(`  @property`)
+        }
+        
+        // 生成属性声明和默认值
+        let typeDeclaration = 'any'
+        let defaultValueCode = 'null'
+        
+        switch (propType) {
+          case 'string':
+            typeDeclaration = 'string'
+            defaultValueCode = `'${defaultValue}'`
+            break
+          case 'number':
+            typeDeclaration = 'number'
+            defaultValueCode = defaultValue || '0'
+            break
+          case 'boolean':
+            typeDeclaration = 'boolean'
+            defaultValueCode = defaultValue === 'true' ? 'true' : 'false'
+            break
+          case 'Node':
+            typeDeclaration = 'Node'
+            defaultValueCode = 'null'
+            break
+          case 'Prefab':
+            typeDeclaration = 'Prefab'
+            defaultValueCode = 'null'
+            break
+          case 'Material':
+            typeDeclaration = 'Material'
+            defaultValueCode = 'null'
+            break
+          case 'SpriteFrame':
+            typeDeclaration = 'SpriteFrame'
+            defaultValueCode = 'null'
+            break
+          case 'AudioClip':
+            typeDeclaration = 'AudioClip'
+            defaultValueCode = 'null'
+            break
+        }
+        
+        code.push(`  ${propName}: ${typeDeclaration} = ${defaultValueCode};`)
+        code.push('')
+      })
+    }
     
     // 生成变量声明（如果有的话）
     if (this.nodeVariables.size > 0) {
@@ -1158,6 +1266,9 @@ export class TypeScriptCodeGenerator {
         break
       case 'function_return':
         // 函数返回节点在函数末尾统一处理，这里跳过
+        break
+      case 'component_property':
+        // 组件属性节点在类声明时处理，这里跳过
         break
       case 'add_numbers':
       case 'subtract_numbers':
