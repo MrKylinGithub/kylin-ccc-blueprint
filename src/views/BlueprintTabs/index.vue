@@ -89,8 +89,8 @@
     <el-dialog
       v-model="showFileSelectDialog"
       title="选择蓝图文件"
-      width="700px"
-      height="550px"
+      width="60%"
+      height="1100px"
       :before-close="cancelSelectFile"
       center
       class="file-select-dialog"
