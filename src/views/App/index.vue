@@ -34,6 +34,11 @@
           <el-divider direction="vertical" />
           
           <!-- 蓝图操作按钮 -->
+          <el-button size="small" @click="newBlueprint">
+            <el-icon><Plus /></el-icon>
+            新建
+          </el-button>
+          
           <el-button size="small" @click="saveBlueprint">
             <el-icon><Document /></el-icon>
             保存
@@ -64,7 +69,7 @@
 </template>
 
 <script setup lang="ts">
-import { Menu, Document, Download, Upload } from '@element-plus/icons-vue'
+import { Menu, Document, Download, Upload, Plus } from '@element-plus/icons-vue'
 import NodeManager from '../NodeManager/index.vue'
 import BlueprintTabs from '../BlueprintTabs/index.vue'
 import { useAppLogic } from './logic'
@@ -76,6 +81,7 @@ const {
   resizeState,
   onResizeStart,
   toggleNodeManager,
+  newBlueprint,
   saveBlueprint,
   openBlueprint,
   exportTypeScript,

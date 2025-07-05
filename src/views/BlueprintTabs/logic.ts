@@ -258,8 +258,23 @@ export const useBlueprintTabs = () => {
     }
   }
 
+  // 新建蓝图
+  const newBlueprint = () => {
+    const timestamp = Date.now()
+    const tab = blueprintStore.createTab(`新蓝图_${timestamp.toString().slice(-4)}`)
+    
+    if (showMessage && typeof showMessage === 'function') {
+      showMessage({
+        message: `已创建新蓝图 "${tab.name}"`,
+        type: 'success',
+        duration: 2000
+      })
+    }
+  }
+
   // 返回的方法对象
   const methods: TabMethods = {
+    newBlueprint,
     saveBlueprint,
     openBlueprint: loadBlueprint,
     exportTypeScript
@@ -286,6 +301,7 @@ export const useBlueprintTabs = () => {
     cancelSelectFile,
     
     // 序列化方法
+    newBlueprint,
     saveBlueprint,
     loadBlueprint,
     exportTypeScript

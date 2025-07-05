@@ -95,6 +95,10 @@ export function useAppLogic() {
   }
 
   // 蓝图操作方法
+  const newBlueprint = () => {
+    refs.blueprintTabsRef.value?.newBlueprint?.()
+  }
+
   const saveBlueprint = () => {
     refs.blueprintTabsRef.value?.saveBlueprint?.()
   }
@@ -184,6 +188,7 @@ export function useAppLogic() {
     // 方法
     onResizeStart,
     toggleNodeManager,
+    newBlueprint,
     saveBlueprint,
     openBlueprint,
     exportTypeScript,
