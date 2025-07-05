@@ -96,10 +96,6 @@
       class="file-select-dialog"
     >
       <div v-if="projectBlueprintFiles.length > 0">
-        <p style="margin-bottom: 16px; color: #666;">
-          在项目中找到以下蓝图文件，请选择要打开的文件：
-        </p>
-        
         <!-- 可滚动的文件列表容器 -->
         <div class="file-list-container">
           <el-radio-group v-model="selectedFileUuid" class="file-list">
@@ -122,7 +118,7 @@
         </div>
       </div>
       
-      <div v-else style="text-align: center; color: #666;">
+      <div v-else class="empty-state">
         <p>项目中没有找到蓝图文件</p>
       </div>
       
