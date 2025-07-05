@@ -96,9 +96,9 @@ export class BlueprintSerializer {
         console.log('尝试使用 Cocos Creator Editor.Message API 保存蓝图...')
         try {
           const Editor = (window as any).Editor
-          const fileName = filename || `${blueprint.name || 'blueprint'}.json`
+          const fileName = filename || `${blueprint.name || 'blueprint'}.bp`
           
-          // 创建资源 URL，保存到 assets 目录
+          // 创建资源 URL，保存到 assets/blueprints 目录，使用 .bp 扩展名
           const assetUrl = `db://assets/blueprints/${fileName}`
           
           console.log('创建蓝图资源:', assetUrl)
@@ -138,12 +138,12 @@ export class BlueprintSerializer {
           try {
             const electronAPI = (window as any).electronAPI
             if (electronAPI.saveFile) {
-              const defaultFileName = filename || `${blueprint.name || 'blueprint'}.json`
+              const defaultFileName = filename || `${blueprint.name || 'blueprint'}.bp`
               saveResult = await electronAPI.saveFile({
                 title: '保存蓝图文件',
                 defaultPath: defaultFileName,
                 filters: [
-                  { name: 'JSON文件', extensions: ['json'] },
+                  { name: '蓝图文件', extensions: ['bp'] },
                   { name: '所有文件', extensions: ['*'] }
                 ],
                 content: json
@@ -160,12 +160,12 @@ export class BlueprintSerializer {
           try {
             const { ipcRenderer } = (window as any).electron
             if (ipcRenderer) {
-              const defaultFileName = filename || `${blueprint.name || 'blueprint'}.json`
+              const defaultFileName = filename || `${blueprint.name || 'blueprint'}.bp`
               saveResult = await ipcRenderer.invoke('save-file', {
                 title: '保存蓝图文件',
                 defaultPath: defaultFileName,
                 filters: [
-                  { name: 'JSON文件', extensions: ['json'] },
+                  { name: '蓝图文件', extensions: ['bp'] },
                   { name: '所有文件', extensions: ['*'] }
                 ],
                 content: json
@@ -197,7 +197,7 @@ export class BlueprintSerializer {
     
     const link = document.createElement('a')
     link.href = url
-    const fileName = filename || `${blueprint.name || 'blueprint'}.json`
+    const fileName = filename || `${blueprint.name || 'blueprint'}.bp`
     link.download = fileName
     document.body.appendChild(link)
     link.click()
@@ -208,56 +208,121 @@ export class BlueprintSerializer {
   }
 
   /**
-   * 从文件上传加载蓝图
+   * 获取项目中的蓝图文件列表
    */
-  static async loadBlueprintFromFile(): Promise<SerializedBlueprint | null> {
+  static async getBlueprintFileList(): Promise<Array<{ name: string; url: string; uuid: string }> | null> {
     // 检查是否在 Electron 环境中（Cocos Creator 基于 Electron）
     const isElectron = typeof window !== 'undefined' && window.process && window.process.versions && window.process.versions.electron
     
     if (isElectron) {
-      // 方式1: 尝试使用 Cocos Creator 的 Editor.Message API
+      // 尝试使用 Cocos Creator 的 Editor.Message API
       if (typeof (window as any).Editor !== 'undefined' && (window as any).Editor.Message) {
-        console.log('尝试使用 Cocos Creator Editor.Message API 加载蓝图...')
+        console.log('查询项目中的蓝图文件...')
         try {
           const Editor = (window as any).Editor
           
-          // 尝试获取资源数据库中的蓝图文件
-          // 这里我们可以尝试查询 assets/blueprints 目录
+          // 查询 assets/blueprints 目录下的 .bp 文件
           const blueprintAssetsResult = await Editor.Message.request('asset-db', 'query-assets', {
-            pattern: 'db://assets/blueprints/**/*.json'
+            pattern: 'db://assets/blueprints/**/*.bp'
           })
           
           console.log('查询到的蓝图资源:', blueprintAssetsResult)
           
           if (blueprintAssetsResult && blueprintAssetsResult.length > 0) {
-            // 如果找到蓝图文件，使用第一个（后续可以改为让用户选择）
-            const firstBlueprint = blueprintAssetsResult[0]
-            console.log('尝试读取蓝图资源:', firstBlueprint.url)
+            return blueprintAssetsResult.map((asset: any) => ({
+              name: asset.name || asset.url.split('/').pop()?.replace('.bp', '') || 'Unknown',
+              url: asset.url,
+              uuid: asset.uuid
+            }))
+          }
+          
+          console.log('项目中未找到蓝图文件')
+          return []
+          
+        } catch (error) {
+          console.warn('查询蓝图文件失败:', error)
+        }
+      }
+    }
+    
+    return null
+  }
+
+  /**
+   * 根据UUID加载指定的蓝图文件
+   */
+  static async loadBlueprintByUuid(uuid: string): Promise<SerializedBlueprint | null> {
+    // 检查是否在 Electron 环境中（Cocos Creator 基于 Electron）
+    const isElectron = typeof window !== 'undefined' && window.process && window.process.versions && window.process.versions.electron
+    
+    if (isElectron) {
+      // 尝试使用 Cocos Creator 的 Editor.Message API
+      if (typeof (window as any).Editor !== 'undefined' && (window as any).Editor.Message) {
+        console.log('加载蓝图文件，UUID:', uuid)
+        try {
+          const Editor = (window as any).Editor
+          
+          // 根据UUID获取资源内容
+          const assetContent = await Editor.Message.request('asset-db', 'query-asset-info', uuid)
+          console.log('蓝图资源信息:', assetContent)
+          
+          if (assetContent && assetContent.source) {
+            // 读取文件内容
+            const content = await Editor.Message.request('asset-db', 'get-asset-by-uuid', uuid)
+            console.log('蓝图文件内容:', content)
             
-            const assetContent = await Editor.Message.request('asset-db', 'query-asset-info', firstBlueprint.uuid)
-            console.log('蓝图资源信息:', assetContent)
-            
-            if (assetContent && assetContent.source) {
-              const json = await Editor.Message.request('asset-db', 'get-asset-by-uuid', firstBlueprint.uuid)
-              console.log('蓝图内容:', json)
-              
-              if (json) {
-                const blueprint = this.deserialize(json)
-                if (blueprint) {
-                  console.log('成功加载蓝图:', blueprint.name)
-                  return blueprint
-                }
+            if (content) {
+              const blueprint = this.deserialize(content)
+              if (blueprint) {
+                console.log('成功加载蓝图:', blueprint.name)
+                return blueprint
               }
             }
           }
           
-          console.log('未找到蓝图资源或加载失败')
+          console.log('蓝图文件加载失败')
           
         } catch (error) {
-          console.warn('Cocos Creator Editor.Message API 调用失败:', error)
+          console.warn('加载蓝图文件失败:', error)
         }
       }
+    }
+    
+    return null
+  }
+
+  /**
+   * 从文件上传加载蓝图（保留原有的文件选择功能作为备用）
+   */
+  static async loadBlueprintFromFile(): Promise<SerializedBlueprint | null> {
+    // 优先尝试从项目中获取蓝图文件列表
+    const blueprintList = await this.getBlueprintFileList()
+    
+    if (blueprintList && blueprintList.length > 0) {
+      console.log('找到项目中的蓝图文件:', blueprintList)
       
+      // 如果只有一个蓝图文件，直接加载
+      if (blueprintList.length === 1) {
+        console.log('自动加载唯一的蓝图文件:', blueprintList[0].name)
+        return await this.loadBlueprintByUuid(blueprintList[0].uuid)
+      }
+      
+      // 如果有多个蓝图文件，需要在UI层面提供选择
+      // 这里暂时返回蓝图列表信息，让UI层面处理选择逻辑
+      console.log('发现多个蓝图文件，需要用户选择')
+      
+      // 临时解决方案：加载第一个蓝图文件
+      console.log('临时加载第一个蓝图文件:', blueprintList[0].name)
+      return await this.loadBlueprintByUuid(blueprintList[0].uuid)
+    }
+    
+    // 如果项目中没有蓝图文件，回退到原有的文件选择方式
+    console.log('项目中没有蓝图文件，使用文件选择方式')
+    
+    // 检查是否在 Electron 环境中（Cocos Creator 基于 Electron）
+    const isElectron = typeof window !== 'undefined' && window.process && window.process.versions && window.process.versions.electron
+    
+    if (isElectron) {
       try {
         console.log('尝试使用 Electron 文件对话框加载蓝图...')
         
@@ -273,6 +338,7 @@ export class BlueprintSerializer {
               loadResult = await electronAPI.loadFile({
                 title: '选择蓝图文件',
                 filters: [
+                  { name: '蓝图文件', extensions: ['bp'] },
                   { name: 'JSON文件', extensions: ['json'] },
                   { name: '所有文件', extensions: ['*'] }
                 ],
@@ -293,6 +359,7 @@ export class BlueprintSerializer {
               loadResult = await ipcRenderer.invoke('load-file', {
                 title: '选择蓝图文件',
                 filters: [
+                  { name: '蓝图文件', extensions: ['bp'] },
                   { name: 'JSON文件', extensions: ['json'] },
                   { name: '所有文件', extensions: ['*'] }
                 ],
@@ -323,7 +390,7 @@ export class BlueprintSerializer {
     return new Promise((resolve) => {
       const input = document.createElement('input')
       input.type = 'file'
-      input.accept = '.json'
+      input.accept = '.bp,.json'
       
       input.onchange = (event) => {
         const file = (event.target as HTMLInputElement).files?.[0]
