@@ -89,7 +89,7 @@
     <el-dialog
       v-model="showFileSelectDialog"
       title="选择蓝图文件"
-      width="500px"
+      width="600px"
       :before-close="cancelSelectFile"
       center
     >
@@ -98,23 +98,26 @@
           在项目中找到以下蓝图文件，请选择要打开的文件：
         </p>
         
-        <el-radio-group v-model="selectedFileUuid" style="width: 100%;">
-          <div
-            v-for="file in projectBlueprintFiles"
-            :key="file.uuid"
-            style="margin-bottom: 12px;"
-          >
-            <el-radio
-              :value="file.uuid"
-              style="width: 100%; margin: 0;"
+        <!-- 可滚动的文件列表容器 -->
+        <div class="file-list-container">
+          <el-radio-group v-model="selectedFileUuid" class="file-list">
+            <div
+              v-for="file in projectBlueprintFiles"
+              :key="file.uuid"
+              class="file-list-item"
             >
-              <div style="display: flex; flex-direction: column; align-items: flex-start; padding-left: 8px;">
-                <span style="font-weight: 500;">{{ file.name }}</span>
-                <span style="font-size: 12px; color: #999;">{{ file.url }}</span>
-              </div>
-            </el-radio>
-          </div>
-        </el-radio-group>
+              <el-radio
+                :value="file.uuid"
+                class="file-radio"
+              >
+                <div class="file-info">
+                  <span class="file-name">{{ file.name }}</span>
+                  <span class="file-path">{{ file.url }}</span>
+                </div>
+              </el-radio>
+            </div>
+          </el-radio-group>
+        </div>
       </div>
       
       <div v-else style="text-align: center; color: #666;">
