@@ -23,6 +23,15 @@ interface ElectronGlobal {
   ipcRenderer?: ElectronIPCRenderer
 }
 
+// Cocos Creator Editor API 类型定义
+interface EditorMessage {
+  request: (system: string, command: string, ...args: any[]) => Promise<any>
+}
+
+interface CocosCreatorEditor {
+  Message: EditorMessage
+}
+
 declare global {
   interface Window {
     process?: {
@@ -32,6 +41,7 @@ declare global {
     }
     electronAPI?: ElectronAPI
     electron?: ElectronGlobal
+    Editor?: CocosCreatorEditor
   }
 }
 

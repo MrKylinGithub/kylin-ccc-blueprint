@@ -91,13 +91,48 @@ export class BlueprintSerializer {
     const isElectron = typeof window !== 'undefined' && window.process && window.process.versions && window.process.versions.electron
     
     if (isElectron) {
+      // 方式1: 尝试使用 Cocos Creator 的 Editor.Message API
+      if (typeof (window as any).Editor !== 'undefined' && (window as any).Editor.Message) {
+        console.log('尝试使用 Cocos Creator Editor.Message API 保存蓝图...')
+        try {
+          const Editor = (window as any).Editor
+          const fileName = filename || `${blueprint.name || 'blueprint'}.json`
+          
+          // 创建资源 URL，保存到 assets 目录
+          const assetUrl = `db://assets/blueprints/${fileName}`
+          
+          console.log('创建蓝图资源:', assetUrl)
+          const result = await Editor.Message.request('asset-db', 'create-asset', assetUrl, json)
+          console.log('Cocos Creator 蓝图资源创建结果:', result)
+          
+          if (result && result.uuid) {
+            console.log('蓝图已保存到项目资源:', assetUrl)
+            return assetUrl
+          }
+          
+          console.log('蓝图资源创建失败，尝试更新现有资源...')
+          
+          // 如果创建失败，尝试保存到现有资源
+          const saveResult = await Editor.Message.request('asset-db', 'save-asset', assetUrl, json)
+          console.log('Cocos Creator 蓝图资源保存结果:', saveResult)
+          
+          if (saveResult) {
+            console.log('蓝图已更新到项目资源:', assetUrl)
+            return assetUrl
+          }
+          
+        } catch (error) {
+          console.warn('Cocos Creator Editor.Message API 调用失败:', error)
+        }
+      }
+      
       try {
         console.log('尝试使用 Electron 文件对话框保存蓝图...')
         
         // 在渲染进程中，尝试使用 IPC 或预加载的 API
         let saveResult = null
         
-        // 方式1: 检查是否有预加载的 electronAPI
+        // 方式2: 检查是否有预加载的 electronAPI
         if (typeof (window as any).electronAPI !== 'undefined') {
           console.log('尝试使用 electronAPI')
           try {
@@ -119,7 +154,7 @@ export class BlueprintSerializer {
           }
         }
         
-        // 方式2: 检查是否有 ipcRenderer
+        // 方式3: 检查是否有 ipcRenderer
         if (!saveResult && typeof (window as any).electron !== 'undefined') {
           console.log('尝试使用 ipcRenderer')
           try {
@@ -180,13 +215,56 @@ export class BlueprintSerializer {
     const isElectron = typeof window !== 'undefined' && window.process && window.process.versions && window.process.versions.electron
     
     if (isElectron) {
+      // 方式1: 尝试使用 Cocos Creator 的 Editor.Message API
+      if (typeof (window as any).Editor !== 'undefined' && (window as any).Editor.Message) {
+        console.log('尝试使用 Cocos Creator Editor.Message API 加载蓝图...')
+        try {
+          const Editor = (window as any).Editor
+          
+          // 尝试获取资源数据库中的蓝图文件
+          // 这里我们可以尝试查询 assets/blueprints 目录
+          const blueprintAssetsResult = await Editor.Message.request('asset-db', 'query-assets', {
+            pattern: 'db://assets/blueprints/**/*.json'
+          })
+          
+          console.log('查询到的蓝图资源:', blueprintAssetsResult)
+          
+          if (blueprintAssetsResult && blueprintAssetsResult.length > 0) {
+            // 如果找到蓝图文件，使用第一个（后续可以改为让用户选择）
+            const firstBlueprint = blueprintAssetsResult[0]
+            console.log('尝试读取蓝图资源:', firstBlueprint.url)
+            
+            const assetContent = await Editor.Message.request('asset-db', 'query-asset-info', firstBlueprint.uuid)
+            console.log('蓝图资源信息:', assetContent)
+            
+            if (assetContent && assetContent.source) {
+              const json = await Editor.Message.request('asset-db', 'get-asset-by-uuid', firstBlueprint.uuid)
+              console.log('蓝图内容:', json)
+              
+              if (json) {
+                const blueprint = this.deserialize(json)
+                if (blueprint) {
+                  console.log('成功加载蓝图:', blueprint.name)
+                  return blueprint
+                }
+              }
+            }
+          }
+          
+          console.log('未找到蓝图资源或加载失败')
+          
+        } catch (error) {
+          console.warn('Cocos Creator Editor.Message API 调用失败:', error)
+        }
+      }
+      
       try {
         console.log('尝试使用 Electron 文件对话框加载蓝图...')
         
         // 在渲染进程中，尝试使用 IPC 或预加载的 API
         let loadResult = null
         
-        // 方式1: 检查是否有预加载的 electronAPI
+        // 方式2: 检查是否有预加载的 electronAPI
         if (typeof (window as any).electronAPI !== 'undefined') {
           console.log('尝试使用 electronAPI')
           try {
@@ -206,7 +284,7 @@ export class BlueprintSerializer {
           }
         }
         
-        // 方式2: 检查是否有 ipcRenderer
+        // 方式3: 检查是否有 ipcRenderer
         if (!loadResult && typeof (window as any).electron !== 'undefined') {
           console.log('尝试使用 ipcRenderer')
           try {
@@ -607,15 +685,51 @@ export class TypeScriptCodeGenerator {
     console.log('window.process?.versions?.electron:', window.process?.versions?.electron)
     console.log('typeof window.electron:', typeof (window as any).electron)
     console.log('typeof window.electronAPI:', typeof (window as any).electronAPI)
+    console.log('typeof Editor:', typeof (window as any).Editor)
     
     if (isElectron) {
+      // 方式1: 尝试使用 Cocos Creator 的 Editor.Message API
+      if (typeof (window as any).Editor !== 'undefined' && (window as any).Editor.Message) {
+        console.log('尝试使用 Cocos Creator Editor.Message API...')
+        try {
+          const Editor = (window as any).Editor
+          const fileName = filename || `${this.blueprint.name || 'blueprint'}.ts`
+          
+          // 创建资源 URL，保存到 assets 目录
+          const assetUrl = `db://assets/scripts/${fileName}`
+          
+          console.log('创建 TypeScript 资源:', assetUrl)
+          const result = await Editor.Message.request('asset-db', 'create-asset', assetUrl, code)
+          console.log('Cocos Creator 资源创建结果:', result)
+          
+          if (result && result.uuid) {
+            console.log('TypeScript 代码已保存到项目资源:', assetUrl)
+            return assetUrl
+          }
+          
+          console.log('资源创建失败，尝试更新现有资源...')
+          
+          // 如果创建失败，尝试保存到现有资源
+          const saveResult = await Editor.Message.request('asset-db', 'save-asset', assetUrl, code)
+          console.log('Cocos Creator 资源保存结果:', saveResult)
+          
+          if (saveResult) {
+            console.log('TypeScript 代码已更新到项目资源:', assetUrl)
+            return assetUrl
+          }
+          
+        } catch (error) {
+          console.warn('Cocos Creator Editor.Message API 调用失败:', error)
+        }
+      }
+      
       try {
         console.log('尝试使用 Electron 文件对话框...')
         
         // 在渲染进程中，尝试使用 IPC 或预加载的 API
         let saveResult = null
         
-        // 方式1: 检查是否有预加载的 electronAPI
+        // 方式2: 检查是否有预加载的 electronAPI
         if (typeof (window as any).electronAPI !== 'undefined') {
           console.log('尝试使用 electronAPI')
           try {
@@ -638,7 +752,7 @@ export class TypeScriptCodeGenerator {
           }
         }
         
-        // 方式2: 检查是否有 ipcRenderer
+        // 方式3: 检查是否有 ipcRenderer
         if (!saveResult && typeof (window as any).electron !== 'undefined') {
           console.log('尝试使用 ipcRenderer')
           try {
