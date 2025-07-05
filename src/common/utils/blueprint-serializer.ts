@@ -78,7 +78,7 @@ export class BlueprintSerializer {
   }
 
   /**
-   * 下载蓝图为JSON文件
+   * 下载蓝图为BP文件
    */
   static async downloadBlueprint(
     blueprint: Blueprint,
@@ -352,7 +352,6 @@ export class BlueprintSerializer {
                 title: '选择蓝图文件',
                 filters: [
                   { name: '蓝图文件', extensions: ['bp'] },
-                  { name: 'JSON文件', extensions: ['json'] },
                   { name: '所有文件', extensions: ['*'] }
                 ],
                 properties: ['openFile']
@@ -373,7 +372,6 @@ export class BlueprintSerializer {
                 title: '选择蓝图文件',
                 filters: [
                   { name: '蓝图文件', extensions: ['bp'] },
-                  { name: 'JSON文件', extensions: ['json'] },
                   { name: '所有文件', extensions: ['*'] }
                 ],
                 properties: ['openFile']
@@ -403,7 +401,7 @@ export class BlueprintSerializer {
     return new Promise((resolve) => {
       const input = document.createElement('input')
       input.type = 'file'
-      input.accept = '.bp,.json'
+      input.accept = '.bp'
       
       input.onchange = (event) => {
         const file = (event.target as HTMLInputElement).files?.[0]

@@ -159,7 +159,7 @@ export const useBlueprintTabs = () => {
   const importBlueprint = () => {
     const input = document.createElement('input')
     input.type = 'file'
-    input.accept = '.bp,.json'
+    input.accept = '.bp'
     input.onchange = (e) => {
       const file = (e.target as HTMLInputElement).files?.[0]
       if (file) {
