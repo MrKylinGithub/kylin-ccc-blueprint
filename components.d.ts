@@ -9,7 +9,6 @@ declare module 'vue' {
   export interface GlobalComponents {
     Button: typeof import('./src/components/base/Button/index.vue')['default']
     ElButton: typeof import('element-plus/es')['ElButton']
-    ElButtonGroup: typeof import('element-plus/es')['ElButtonGroup']
     ElColorPicker: typeof import('element-plus/es')['ElColorPicker']
     ElDialog: typeof import('element-plus/es')['ElDialog']
     ElDivider: typeof import('element-plus/es')['ElDivider']
