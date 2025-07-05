@@ -1002,7 +1002,7 @@ export class TypeScriptCodeGenerator {
           for (const connection of nextConnections) {
             const nextNode = this.nodeMap.get(connection.toNodeId)
             if (nextNode) {
-              const nodeCode = this.generateNodeExecution(nextNode, new Set(), 1)
+              const nodeCode = this.generateNodeExecution(nextNode, new Set(), 2)
               nodeCode.forEach(line => code.push(line))
             }
           }
