@@ -179,7 +179,7 @@
 
 /* 文件选择对话框样式 */
 .file-list-container {
-  max-height: 400px;
+  max-height: 500px;
   overflow-y: auto;
   border: 1px solid $color-border;
   border-radius: 6px;
@@ -188,15 +188,16 @@
 
 .file-list {
   width: 100%;
-  
-  :deep(.el-radio-group) {
-    width: 100%;
-    display: flex;
-    flex-direction: column;
-  }
+}
+
+.file-list :deep(.el-radio-group) {
+  width: 100%;
+  display: flex !important;
+  flex-direction: column !important;
 }
 
 .file-list-item {
+  width: 100%;
   border-bottom: 1px solid $color-border;
   
   &:last-child {
@@ -209,17 +210,20 @@
 }
 
 .file-radio {
-  width: 100%;
-  margin: 0;
-  padding: 12px 16px;
+  width: 100% !important;
+  margin: 0 !important;
+  padding: 16px !important;
+  display: flex !important;
+  align-items: flex-start !important;
   
   :deep(.el-radio__input) {
     margin-right: 12px;
+    margin-top: 2px;
   }
   
   :deep(.el-radio__label) {
     width: 100%;
-    padding-left: 0;
+    padding-left: 0 !important;
   }
 }
 
@@ -233,12 +237,26 @@
 .file-name {
   font-weight: 500;
   color: $color-text-primary;
-  font-size: 14px;
-  margin-bottom: 4px;
+  font-size: 15px;
+  margin-bottom: 6px;
 }
 
 .file-path {
   font-size: 12px;
   color: $color-text-light;
   word-break: break-all;
+  opacity: 0.8;
+}
+
+/* 对话框尺寸调整 */
+:deep(.el-dialog.is-fullscreen) {
+  width: 700px !important;
+  height: 600px !important;
+}
+
+:deep(.el-dialog) {
+  &[aria-label="选择蓝图文件"] {
+    width: 700px !important;
+    min-height: 500px !important;
+  }
 } 

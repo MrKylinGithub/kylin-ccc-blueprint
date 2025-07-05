@@ -89,9 +89,11 @@
     <el-dialog
       v-model="showFileSelectDialog"
       title="选择蓝图文件"
-      width="600px"
+      width="700px"
+      height="550px"
       :before-close="cancelSelectFile"
       center
+      class="file-select-dialog"
     >
       <div v-if="projectBlueprintFiles.length > 0">
         <p style="margin-bottom: 16px; color: #666;">
