@@ -305,10 +305,10 @@ export class BlueprintSerializer {
   }
 
   /**
-   * 从文件系统选择蓝图文件加载（文件对话框方式）
+   * 从文件系统选择蓝图文件加载（在 Cocos Creator 环境中已废弃）
    */
   static async loadBlueprintFromFileSystem(): Promise<SerializedBlueprint | null> {
-    console.log('使用文件对话框选择蓝图文件')
+    console.warn('loadBlueprintFromFileSystem 已废弃，在 Cocos Creator 环境中应使用项目文件列表')
     
     // 检查是否在 Electron 环境中（Cocos Creator 基于 Electron）
     const isElectron = typeof window !== 'undefined' && window.process && window.process.versions && window.process.versions.electron
@@ -413,11 +413,11 @@ export class BlueprintSerializer {
   }
 
   /**
-   * 从文件上传加载蓝图（保留原有的文件选择功能作为备用）
+   * 从文件上传加载蓝图（在 Cocos Creator 环境中已废弃，使用项目文件列表）
    */
   static async loadBlueprintFromFile(): Promise<SerializedBlueprint | null> {
-    // 直接使用文件系统选择方式
-    return this.loadBlueprintFromFileSystem()
+    console.warn('loadBlueprintFromFile 已废弃，请使用 loadBlueprintFromProject')
+    return null
   }
 }
 
