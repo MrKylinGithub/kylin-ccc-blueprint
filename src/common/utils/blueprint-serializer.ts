@@ -1002,7 +1002,7 @@ export class TypeScriptCodeGenerator {
           for (const connection of nextConnections) {
             const nextNode = this.nodeMap.get(connection.toNodeId)
             if (nextNode) {
-              const nodeCode = this.generateNodeExecution(nextNode, new Set())
+              const nodeCode = this.generateNodeExecution(nextNode, new Set(), 1)
               nodeCode.forEach(line => code.push(line))
             }
           }
@@ -1066,12 +1066,12 @@ export class TypeScriptCodeGenerator {
       })
       
       for (const node of executableNodes) {
-        code.push(...this.generateNodeExecution(node))
+        code.push(...this.generateNodeExecution(node, new Set(), 1))
       }
     } else {
       // 从开始节点开始执行
       for (const startNode of startNodes) {
-        code.push(...this.generateNodeExecution(startNode))
+        code.push(...this.generateNodeExecution(startNode, new Set(), 1))
       }
     }
     
@@ -1110,7 +1110,7 @@ export class TypeScriptCodeGenerator {
   /**
    * 生成节点执行代码
    */
-  private generateNodeExecution(node: NodeInstance, visitedNodes = new Set<string>()): string[] {
+  private generateNodeExecution(node: NodeInstance, visitedNodes = new Set<string>(), indentLevel = 1): string[] {
     const code: string[] = []
     
     if (visitedNodes.has(node.id)) {
@@ -1132,26 +1132,26 @@ export class TypeScriptCodeGenerator {
       case 'number_constant':
       case 'string_constant':
       case 'boolean_constant':
-        code.push(...this.generateConstantNode(node, definition))
+        code.push(...this.generateConstantNode(node, definition, indentLevel))
         break
       case 'print':
       case 'debug_log':
-        code.push(...this.generatePrintNode(node, definition))
+        code.push(...this.generatePrintNode(node, definition, indentLevel))
         break
       case 'delay':
-        code.push(...this.generateDelayNode(node, definition))
+        code.push(...this.generateDelayNode(node, definition, indentLevel))
         break
       case 'sequence':
-        code.push(...this.generateSequenceNode(node, definition, visitedNodes))
+        code.push(...this.generateSequenceNode(node, definition, visitedNodes, indentLevel))
         break
       case 'parallel':
-        code.push(...this.generateParallelNode(node, definition, visitedNodes))
+        code.push(...this.generateParallelNode(node, definition, visitedNodes, indentLevel))
         break
       case 'input':
-        code.push(...this.generateInputNode(node, definition))
+        code.push(...this.generateInputNode(node, definition, indentLevel))
         break
       case 'output':
-        code.push(...this.generateOutputNode(node, definition))
+        code.push(...this.generateOutputNode(node, definition, indentLevel))
         break
       case 'function_parameter':
         // 函数参数节点已经在函数开始时初始化，这里跳过
@@ -1163,17 +1163,17 @@ export class TypeScriptCodeGenerator {
       case 'subtract_numbers':
       case 'multiply_numbers':
       case 'divide_numbers':
-        code.push(...this.generateMathNode(node, definition))
+        code.push(...this.generateMathNode(node, definition, indentLevel))
         break
       case 'logic_and':
       case 'logic_or':
       case 'logic_not':
-        code.push(...this.generateLogicNode(node, definition))
+        code.push(...this.generateLogicNode(node, definition, indentLevel))
         break
       case 'compare_equal':
       case 'compare_greater':
       case 'compare_less':
-        code.push(...this.generateCompareNode(node, definition))
+        code.push(...this.generateCompareNode(node, definition, indentLevel))
         break
       default:
         // 不支持的节点类型，跳过
@@ -1185,7 +1185,7 @@ export class TypeScriptCodeGenerator {
     for (const connection of nextConnections) {
       const nextNode = this.nodeMap.get(connection.toNodeId)
       if (nextNode && !visitedNodes.has(nextNode.id)) {
-        code.push(...this.generateNodeExecution(nextNode, visitedNodes))
+        code.push(...this.generateNodeExecution(nextNode, visitedNodes, indentLevel))
       }
     }
 
@@ -1193,9 +1193,16 @@ export class TypeScriptCodeGenerator {
   }
 
   /**
+   * 生成缩进字符串
+   */
+  private indent(level: number): string {
+    return '  '.repeat(level)
+  }
+
+  /**
    * 生成常量节点代码
    */
-  private generateConstantNode(node: NodeInstance, definition: NodeDefinition): string[] {
+  private generateConstantNode(node: NodeInstance, definition: NodeDefinition, indentLevel: number): string[] {
     const code: string[] = []
     const value = node.inputs?.value ?? ''
     const outputParam = definition.outputs.find(o => o.type !== 'exec')
@@ -1203,7 +1210,7 @@ export class TypeScriptCodeGenerator {
     if (outputParam) {
       const varName = this.nodeVariables.get(`${node.id}_${outputParam.id}`)
       if (varName) {
-        code.push(`  ${varName} = ${JSON.stringify(value)};`)
+        code.push(`${this.indent(indentLevel)}${varName} = ${JSON.stringify(value)};`)
       }
     }
     
@@ -1213,7 +1220,7 @@ export class TypeScriptCodeGenerator {
   /**
    * 生成打印节点代码
    */
-  private generatePrintNode(node: NodeInstance, definition: NodeDefinition): string[] {
+  private generatePrintNode(node: NodeInstance, definition: NodeDefinition, indentLevel: number): string[] {
     const code: string[] = []
     const inputParam = definition.inputs.find(i => i.type !== 'exec')
     
@@ -1223,9 +1230,9 @@ export class TypeScriptCodeGenerator {
       if (inputConnections.length > 0) {
         const connection = inputConnections[0]
         const value = this.getConnectionValue(connection.fromNodeId, connection.fromParamId)
-        code.push(`  log(${value});`)
+        code.push(`${this.indent(indentLevel)}log(${value});`)
       } else {
-        code.push(`  log('${node.inputs?.message || 'Hello World'}');`)
+        code.push(`${this.indent(indentLevel)}log('${node.inputs?.message || 'Hello World'}');`)
       }
     }
     
@@ -1235,17 +1242,17 @@ export class TypeScriptCodeGenerator {
   /**
    * 生成延迟节点代码
    */
-  private generateDelayNode(node: NodeInstance, definition: NodeDefinition): string[] {
+  private generateDelayNode(node: NodeInstance, definition: NodeDefinition, indentLevel: number): string[] {
     const code: string[] = []
     const duration = node.inputs?.duration || 1000
-    code.push(`  await delay(${duration});`)
+    code.push(`${this.indent(indentLevel)}await delay(${duration});`)
     return code
   }
 
   /**
    * 生成序列节点代码
    */
-  private generateSequenceNode(node: NodeInstance, definition: NodeDefinition, visitedNodes: Set<string>): string[] {
+  private generateSequenceNode(node: NodeInstance, definition: NodeDefinition, visitedNodes: Set<string>, indentLevel: number): string[] {
     const code: string[] = []
     
     // 按顺序执行输出
@@ -1255,7 +1262,7 @@ export class TypeScriptCodeGenerator {
         for (const connection of connections) {
           const nextNode = this.nodeMap.get(connection.toNodeId)
           if (nextNode && !visitedNodes.has(nextNode.id)) {
-            code.push(...this.generateNodeExecution(nextNode, new Set(visitedNodes)))
+            code.push(...this.generateNodeExecution(nextNode, new Set(visitedNodes), indentLevel))
           }
         }
       }
@@ -1267,7 +1274,7 @@ export class TypeScriptCodeGenerator {
   /**
    * 生成并行节点代码
    */
-  private generateParallelNode(node: NodeInstance, definition: NodeDefinition, visitedNodes: Set<string>): string[] {
+  private generateParallelNode(node: NodeInstance, definition: NodeDefinition, visitedNodes: Set<string>, indentLevel: number): string[] {
     const code: string[] = []
     const parallelTasks: string[] = []
     
@@ -1282,16 +1289,16 @@ export class TypeScriptCodeGenerator {
             const taskName = `task_${connection.toNodeId}`
             parallelTasks.push(taskName)
             
-            code.push(`  const ${taskName} = async () => {`)
-            code.push(...this.generateNodeExecution(nextNode, new Set(visitedNodes)).map(line => '  ' + line))
-            code.push('  };')
+            code.push(`${this.indent(indentLevel)}const ${taskName} = async () => {`)
+            code.push(...this.generateNodeExecution(nextNode, new Set(visitedNodes), indentLevel + 1))
+            code.push(`${this.indent(indentLevel)}};`)
           }
         }
       }
     }
 
     if (parallelTasks.length > 0) {
-      code.push(`  await Promise.all([${parallelTasks.join(', ')}].map(task => task()));`)
+      code.push(`${this.indent(indentLevel)}await Promise.all([${parallelTasks.join(', ')}].map(task => task()));`)
     }
 
     return code
@@ -1300,7 +1307,7 @@ export class TypeScriptCodeGenerator {
   /**
    * 生成输入节点代码
    */
-  private generateInputNode(node: NodeInstance, definition: NodeDefinition): string[] {
+  private generateInputNode(node: NodeInstance, definition: NodeDefinition, indentLevel: number): string[] {
     const code: string[] = []
     const paramName = node.inputs?.name || 'input'
     const outputParam = definition.outputs.find(o => o.type !== 'exec')
@@ -1308,7 +1315,7 @@ export class TypeScriptCodeGenerator {
     if (outputParam) {
       const varName = this.nodeVariables.get(`${node.id}_${outputParam.id}`)
       if (varName) {
-        code.push(`  ${varName} = ${paramName};`)
+        code.push(`${this.indent(indentLevel)}${varName} = ${paramName};`)
       }
     }
     
@@ -1318,7 +1325,7 @@ export class TypeScriptCodeGenerator {
   /**
    * 生成输出节点代码
    */
-  private generateOutputNode(node: NodeInstance, definition: NodeDefinition): string[] {
+  private generateOutputNode(node: NodeInstance, definition: NodeDefinition, indentLevel: number): string[] {
     const code: string[] = []
     const paramName = node.inputs?.name || 'output'
     const inputParam = definition.inputs.find(i => i.type !== 'exec')
@@ -1329,9 +1336,9 @@ export class TypeScriptCodeGenerator {
       if (inputConnections.length > 0) {
         const connection = inputConnections[0]
         const value = this.getConnectionValue(connection.fromNodeId, connection.fromParamId)
-        code.push(`  ${paramName} = ${value};`)
+        code.push(`${this.indent(indentLevel)}${paramName} = ${value};`)
       } else {
-        code.push(`  ${paramName} = undefined;`)
+        code.push(`${this.indent(indentLevel)}${paramName} = undefined;`)
       }
     }
     
@@ -1392,7 +1399,7 @@ export class TypeScriptCodeGenerator {
   /**
    * 生成数学运算节点代码
    */
-  private generateMathNode(node: NodeInstance, definition: NodeDefinition): string[] {
+  private generateMathNode(node: NodeInstance, definition: NodeDefinition, indentLevel: number): string[] {
     const code: string[] = []
     const outputParam = definition.outputs.find(o => o.type !== 'exec')
     
@@ -1417,7 +1424,7 @@ export class TypeScriptCodeGenerator {
           case 'divide_numbers': functionName = 'divide'; break
         }
         
-        code.push(`  ${varName} = ${functionName}(${aValue}, ${bValue});`)
+        code.push(`${this.indent(indentLevel)}${varName} = ${functionName}(${aValue}, ${bValue});`)
       }
     }
     
@@ -1427,7 +1434,7 @@ export class TypeScriptCodeGenerator {
   /**
    * 生成逻辑运算节点代码
    */
-  private generateLogicNode(node: NodeInstance, definition: NodeDefinition): string[] {
+  private generateLogicNode(node: NodeInstance, definition: NodeDefinition, indentLevel: number): string[] {
     const code: string[] = []
     const outputParam = definition.outputs.find(o => o.type !== 'exec')
     
@@ -1439,7 +1446,7 @@ export class TypeScriptCodeGenerator {
           const value = valueConnection ? 
             this.getConnectionValue(valueConnection.fromNodeId, valueConnection.fromParamId) : 
             (node.inputs?.value || false)
-          code.push(`  ${varName} = logicNot(${value});`)
+          code.push(`${this.indent(indentLevel)}${varName} = logicNot(${value});`)
         } else {
           const aConnection = this.getInputConnections(node.id, 'a')[0]
           const bConnection = this.getInputConnections(node.id, 'b')[0]
@@ -1452,7 +1459,7 @@ export class TypeScriptCodeGenerator {
             (node.inputs?.b || false)
           
           const functionName = definition.id === 'logic_and' ? 'logicAnd' : 'logicOr'
-          code.push(`  ${varName} = ${functionName}(${aValue}, ${bValue});`)
+          code.push(`${this.indent(indentLevel)}${varName} = ${functionName}(${aValue}, ${bValue});`)
         }
       }
     }
@@ -1463,7 +1470,7 @@ export class TypeScriptCodeGenerator {
   /**
    * 生成比较运算节点代码
    */
-  private generateCompareNode(node: NodeInstance, definition: NodeDefinition): string[] {
+  private generateCompareNode(node: NodeInstance, definition: NodeDefinition, indentLevel: number): string[] {
     const code: string[] = []
     const outputParam = definition.outputs.find(o => o.type !== 'exec')
     
@@ -1487,7 +1494,7 @@ export class TypeScriptCodeGenerator {
           case 'compare_less': functionName = 'less'; break
         }
         
-        code.push(`  ${varName} = ${functionName}(${aValue}, ${bValue});`)
+        code.push(`${this.indent(indentLevel)}${varName} = ${functionName}(${aValue}, ${bValue});`)
       }
     }
     
@@ -1535,7 +1542,7 @@ export class TypeScriptCodeGenerator {
   /**
    * 生成函数返回节点代码
    */
-  private generateReturnNode(node: NodeInstance, definition: NodeDefinition): string[] {
+  private generateReturnNode(node: NodeInstance, definition: NodeDefinition, indentLevel: number): string[] {
     const code: string[] = []
     const inputParam = definition.inputs.find(i => i.type !== 'exec')
     
@@ -1544,7 +1551,7 @@ export class TypeScriptCodeGenerator {
       if (inputConnections.length > 0) {
         const connection = inputConnections[0]
         const value = this.getConnectionValue(connection.fromNodeId, connection.fromParamId)
-        code.push(`  return ${value};`)
+        code.push(`${this.indent(indentLevel)}return ${value};`)
       }
     }
     
