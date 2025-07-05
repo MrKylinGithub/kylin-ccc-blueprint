@@ -271,36 +271,81 @@ export class BlueprintSerializer {
     if (isElectron) {
       // 尝试使用 Cocos Creator 的 Editor.Message API
       if (typeof (window as any).Editor !== 'undefined' && (window as any).Editor.Message) {
-        console.log('加载蓝图文件，UUID:', uuid)
+        console.log('=== 开始加载蓝图文件 ===')
+        console.log('UUID:', uuid)
         try {
           const Editor = (window as any).Editor
           
-          // 根据UUID获取资源内容
-          const assetContent = await Editor.Message.request('asset-db', 'query-asset-info', uuid)
-          console.log('蓝图资源信息:', assetContent)
+          // 根据UUID获取资源信息
+          console.log('1. 查询资源信息...')
+          const assetInfo = await Editor.Message.request('asset-db', 'query-asset-info', uuid)
+          console.log('资源信息:', assetInfo)
           
-          if (assetContent && assetContent.source) {
-            // 读取文件内容
-            const content = await Editor.Message.request('asset-db', 'get-asset-by-uuid', uuid)
-            console.log('蓝图文件内容:', content)
+          if (assetInfo && assetInfo.url) {
+            // 使用资源URL读取文件内容
+            console.log('2. 使用资源URL读取文件内容...')
+            console.log('资源URL:', assetInfo.url)
             
-            if (content) {
-              const blueprint = this.deserialize(content)
-              if (blueprint) {
-                console.log('成功加载蓝图:', blueprint.name)
-                return blueprint
+            // 尝试使用文件系统API读取文件
+            const fs = (window as any).require ? (window as any).require('fs') : null
+            if (fs) {
+              // 将 db:// URL 转换为实际文件路径
+              const filePath = assetInfo.url.replace('db://assets/', Editor.Project.path + '/assets/')
+              console.log('文件路径:', filePath)
+              
+              try {
+                const content = fs.readFileSync(filePath, 'utf8')
+                console.log('文件内容类型:', typeof content)
+                console.log('文件内容长度:', content ? content.length : '无内容')
+                console.log('文件内容预览:', content ? content.substring(0, 200) + '...' : '无内容')
+                
+                if (content) {
+                  console.log('3. 反序列化蓝图数据...')
+                  const blueprint = this.deserialize(content)
+                  if (blueprint) {
+                    console.log('✅ 成功加载蓝图:', blueprint.name)
+                    console.log('蓝图信息:', {
+                      name: blueprint.name,
+                      version: blueprint.version,
+                      nodeCount: blueprint.blueprint.nodes.length,
+                      connectionCount: blueprint.blueprint.connections.length,
+                      nodeDefinitionCount: blueprint.nodeDefinitions.length
+                    })
+                    return blueprint
+                  } else {
+                    console.error('❌ 蓝图反序列化失败')
+                  }
+                } else {
+                  console.error('❌ 文件内容为空')
+                }
+              } catch (fsError) {
+                console.error('❌ 文件系统读取失败:', fsError)
               }
+            } else {
+              console.error('❌ 无法访问文件系统API')
             }
+          } else {
+            console.error('❌ 无法获取资源信息或资源URL')
           }
           
-          console.log('蓝图文件加载失败')
-          
         } catch (error) {
-          console.warn('加载蓝图文件失败:', error)
+          console.error('❌ 加载蓝图文件时发生错误:', error)
+          if (error instanceof Error) {
+            console.error('错误详情:', {
+              name: error.name,
+              message: error.message,
+              stack: error.stack
+            })
+          }
         }
+      } else {
+        console.error('❌ Editor.Message API 不可用')
       }
+    } else {
+      console.error('❌ 不在 Electron 环境中')
     }
     
+    console.log('=== 蓝图文件加载失败 ===')
     return null
   }
 
