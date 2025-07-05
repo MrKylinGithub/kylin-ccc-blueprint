@@ -1,4 +1,4 @@
-import { computed, inject } from 'vue'
+import { computed, ref, inject } from 'vue'
 import { ElMessageBox } from 'element-plus'
 import { blueprintStore } from '../../stores/blueprint'
 import { keyMessage } from '../../panels/provide-inject'
@@ -12,6 +12,11 @@ export const useBlueprintTabs = () => {
   // 响应式数据
   const tabs = computed(() => blueprintStore.tabs)
   const activeTabId = computed(() => blueprintStore.activeTabId)
+  
+  // 文件选择对话框相关
+  const showFileSelectDialog = ref(false)
+  const projectBlueprintFiles = ref<Array<{ name: string; url: string; uuid: string }>>([])
+  const selectedFileUuid = ref('')
 
 
 
@@ -114,30 +119,85 @@ export const useBlueprintTabs = () => {
     }
   }
 
-  // 从文件加载蓝图
+  // 从项目文件加载蓝图
   const loadBlueprint = async () => {
     try {
-      const data = await BlueprintSerializer.loadBlueprintFromFile()
+      const result = await BlueprintSerializer.loadBlueprintFromProject()
       
-      if (data) {
-        // 创建新的标签页
-        const tab = blueprintStore.createTab(data.name)
-        tab.blueprint = { ...data.blueprint }
-        
-        // 合并节点定义
-        data.nodeDefinitions.forEach(def => {
-          if (!blueprintStore.nodeDefinitions.find(d => d.id === def.id)) {
-            blueprintStore.addNodeDefinition(def)
-          }
-        })
-        
-        if (showMessage && typeof showMessage === 'function') {
+      if (result.blueprintList && result.blueprintList.length > 0) {
+        // 有项目文件，显示选择对话框
+        projectBlueprintFiles.value = result.blueprintList
+        selectedFileUuid.value = result.blueprintList[0].uuid
+        showFileSelectDialog.value = true
+      } else {
+        // 没有项目文件，直接使用文件系统选择
+        const data = await result.fallback()
+        if (data) {
+          await loadBlueprintData(data)
+        } else if (showMessage && typeof showMessage === 'function') {
           showMessage({
-            message: `蓝图 "${data.name}" 加载成功`,
-            type: 'success',
+            message: '加载已取消',
+            type: 'info',
             duration: 2000
           })
         }
+      }
+    } catch (error) {
+      if (showMessage && typeof showMessage === 'function') {
+        showMessage({
+          message: '获取蓝图文件列表失败',
+          type: 'error',
+          duration: 3000
+        })
+      }
+    }
+  }
+  
+  // 确认选择项目文件
+  const confirmSelectFile = async () => {
+    if (!selectedFileUuid.value) {
+      if (showMessage && typeof showMessage === 'function') {
+        showMessage({
+          message: '请选择一个蓝图文件',
+          type: 'warning',
+          duration: 2000
+        })
+      }
+      return
+    }
+    
+    try {
+      const data = await BlueprintSerializer.loadBlueprintByUuid(selectedFileUuid.value)
+      if (data) {
+        await loadBlueprintData(data)
+        showFileSelectDialog.value = false
+      } else {
+        if (showMessage && typeof showMessage === 'function') {
+          showMessage({
+            message: '加载蓝图文件失败',
+            type: 'error',
+            duration: 3000
+          })
+        }
+      }
+    } catch (error) {
+      if (showMessage && typeof showMessage === 'function') {
+        showMessage({
+          message: '加载蓝图文件失败',
+          type: 'error',
+          duration: 3000
+        })
+      }
+    }
+  }
+  
+  // 选择从文件系统加载
+  const selectFromFileSystem = async () => {
+    showFileSelectDialog.value = false
+    try {
+      const data = await BlueprintSerializer.loadBlueprintFromFileSystem()
+      if (data) {
+        await loadBlueprintData(data)
       } else if (showMessage && typeof showMessage === 'function') {
         showMessage({
           message: '加载已取消',
@@ -153,6 +213,34 @@ export const useBlueprintTabs = () => {
           duration: 3000
         })
       }
+    }
+  }
+  
+  // 取消文件选择
+  const cancelSelectFile = () => {
+    showFileSelectDialog.value = false
+    selectedFileUuid.value = ''
+  }
+  
+  // 加载蓝图数据的公共方法
+  const loadBlueprintData = async (data: any) => {
+    // 创建新的标签页
+    const tab = blueprintStore.createTab(data.name)
+    tab.blueprint = { ...data.blueprint }
+    
+    // 合并节点定义
+    data.nodeDefinitions.forEach((def: any) => {
+      if (!blueprintStore.nodeDefinitions.find(d => d.id === def.id)) {
+        blueprintStore.addNodeDefinition(def)
+      }
+    })
+    
+    if (showMessage && typeof showMessage === 'function') {
+      showMessage({
+        message: `蓝图 "${data.name}" 加载成功`,
+        type: 'success',
+        duration: 2000
+      })
     }
   }
 
@@ -215,10 +303,20 @@ export const useBlueprintTabs = () => {
     activeTabId,
     activeTab,
     
+    // 文件选择对话框状态
+    showFileSelectDialog,
+    projectBlueprintFiles,
+    selectedFileUuid,
+    
     // 方法
     selectTab,
     closeTab,
     methods,
+    
+    // 文件选择方法
+    confirmSelectFile,
+    selectFromFileSystem,
+    cancelSelectFile,
     
     // 序列化方法
     saveBlueprint,

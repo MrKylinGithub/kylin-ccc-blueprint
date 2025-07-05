@@ -305,32 +305,10 @@ export class BlueprintSerializer {
   }
 
   /**
-   * 从文件上传加载蓝图（保留原有的文件选择功能作为备用）
+   * 从文件系统选择蓝图文件加载（文件对话框方式）
    */
-  static async loadBlueprintFromFile(): Promise<SerializedBlueprint | null> {
-    // 优先尝试从项目中获取蓝图文件列表
-    const blueprintList = await this.getBlueprintFileList()
-    
-    if (blueprintList && blueprintList.length > 0) {
-      console.log('找到项目中的蓝图文件:', blueprintList)
-      
-      // 如果只有一个蓝图文件，直接加载
-      if (blueprintList.length === 1) {
-        console.log('自动加载唯一的蓝图文件:', blueprintList[0].name)
-        return await this.loadBlueprintByUuid(blueprintList[0].uuid)
-      }
-      
-      // 如果有多个蓝图文件，需要在UI层面提供选择
-      // 这里暂时返回蓝图列表信息，让UI层面处理选择逻辑
-      console.log('发现多个蓝图文件，需要用户选择')
-      
-      // 临时解决方案：加载第一个蓝图文件
-      console.log('临时加载第一个蓝图文件:', blueprintList[0].name)
-      return await this.loadBlueprintByUuid(blueprintList[0].uuid)
-    }
-    
-    // 如果项目中没有蓝图文件，回退到原有的文件选择方式
-    console.log('项目中没有蓝图文件，使用文件选择方式')
+  static async loadBlueprintFromFileSystem(): Promise<SerializedBlueprint | null> {
+    console.log('使用文件对话框选择蓝图文件')
     
     // 检查是否在 Electron 环境中（Cocos Creator 基于 Electron）
     const isElectron = typeof window !== 'undefined' && window.process && window.process.versions && window.process.versions.electron
@@ -421,6 +399,27 @@ export class BlueprintSerializer {
       
       input.click()
     })
+  }
+
+  /**
+   * 获取项目蓝图文件列表并返回给UI层处理选择
+   */
+  static async loadBlueprintFromProject(): Promise<{ blueprintList: Array<{ name: string; url: string; uuid: string }> | null, fallback: () => Promise<SerializedBlueprint | null> }> {
+    // 获取项目中的蓝图文件列表
+    const blueprintList = await this.getBlueprintFileList()
+    
+    return {
+      blueprintList,
+      fallback: () => this.loadBlueprintFromFileSystem()
+    }
+  }
+
+  /**
+   * 从文件上传加载蓝图（保留原有的文件选择功能作为备用）
+   */
+  static async loadBlueprintFromFile(): Promise<SerializedBlueprint | null> {
+    // 直接使用文件系统选择方式
+    return this.loadBlueprintFromFileSystem()
   }
 }
 

@@ -49,8 +49,59 @@
         <BlueprintEditor :blueprint="tab.blueprint" />
       </div>
     </div>
-
-
+    
+    <!-- 蓝图文件选择对话框 -->
+    <el-dialog
+      v-model="showFileSelectDialog"
+      title="选择蓝图文件"
+      width="500px"
+      :before-close="cancelSelectFile"
+      center
+    >
+      <div v-if="projectBlueprintFiles.length > 0">
+        <p style="margin-bottom: 16px; color: #666;">
+          在项目中找到以下蓝图文件，请选择要打开的文件：
+        </p>
+        
+        <el-radio-group v-model="selectedFileUuid" style="width: 100%;">
+          <div
+            v-for="file in projectBlueprintFiles"
+            :key="file.uuid"
+            style="margin-bottom: 12px;"
+          >
+            <el-radio
+              :value="file.uuid"
+              style="width: 100%; margin: 0;"
+            >
+              <div style="display: flex; flex-direction: column; align-items: flex-start; padding-left: 8px;">
+                <span style="font-weight: 500;">{{ file.name }}</span>
+                <span style="font-size: 12px; color: #999;">{{ file.url }}</span>
+              </div>
+            </el-radio>
+          </div>
+        </el-radio-group>
+      </div>
+      
+      <div v-else style="text-align: center; color: #666;">
+        <p>项目中没有找到蓝图文件</p>
+      </div>
+      
+      <template #footer>
+        <div class="dialog-footer">
+          <el-button @click="cancelSelectFile">取消</el-button>
+          <el-button @click="selectFromFileSystem">
+            从文件系统选择...
+          </el-button>
+          <el-button 
+            v-if="projectBlueprintFiles.length > 0"
+            type="primary" 
+            @click="confirmSelectFile"
+          >
+            打开选中文件
+          </el-button>
+        </div>
+      </template>
+    </el-dialog>
   </div>
 </template>
 
@@ -65,10 +116,20 @@ const {
   activeTabId,
   activeTab,
   
+  // 文件选择对话框状态
+  showFileSelectDialog,
+  projectBlueprintFiles,
+  selectedFileUuid,
+  
   // 方法
   selectTab,
   closeTab,
   methods,
+  
+  // 文件选择方法
+  confirmSelectFile,
+  selectFromFileSystem,
+  cancelSelectFile,
   
   // 序列化方法
   saveBlueprint,
