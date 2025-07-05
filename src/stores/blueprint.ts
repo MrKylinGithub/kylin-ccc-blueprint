@@ -100,6 +100,15 @@ export const blueprintStore = reactive({
       outputs: {}
     };
     
+    // 为常量节点设置默认值
+    if (definitionId === 'number_constant') {
+      node.inputs.value = 0;
+    } else if (definitionId === 'string_constant') {
+      node.inputs.value = '';
+    } else if (definitionId === 'boolean_constant') {
+      node.inputs.value = false;
+    }
+    
     blueprint.nodes.push(node);
     this.markTabDirty(this.activeTabId);
     return node;
@@ -220,9 +229,7 @@ blueprintStore.nodeDefinitions.push(
     name: '数字常量',
     category: '常量',
     description: '提供一个固定的数字值',
-    inputs: [
-      { id: 'value', name: '数值', type: 'number', defaultValue: 0 }
-    ],
+    inputs: [],
     outputs: [
       { id: 'value', name: '数值', type: 'number' }
     ],
@@ -233,9 +240,7 @@ blueprintStore.nodeDefinitions.push(
     name: '字符串常量',
     category: '常量',
     description: '提供一个固定的字符串值',
-    inputs: [
-      { id: 'value', name: '字符串', type: 'string', defaultValue: '' }
-    ],
+    inputs: [],
     outputs: [
       { id: 'value', name: '字符串', type: 'string' }
     ],
@@ -246,9 +251,7 @@ blueprintStore.nodeDefinitions.push(
     name: '布尔常量',
     category: '常量',
     description: '提供一个固定的布尔值（真/假）',
-    inputs: [
-      { id: 'value', name: '布尔值', type: 'boolean', defaultValue: false }
-    ],
+    inputs: [],
     outputs: [
       { id: 'value', name: '布尔值', type: 'boolean' }
     ],

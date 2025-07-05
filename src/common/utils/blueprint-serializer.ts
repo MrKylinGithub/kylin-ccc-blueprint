@@ -630,6 +630,9 @@ export class TypeScriptCodeGenerator {
     
     switch (definition.id) {
       case 'constant':
+      case 'number_constant':
+      case 'string_constant':
+      case 'boolean_constant':
         code.push(...this.generateConstantNode(node, definition))
         break
       case 'print':

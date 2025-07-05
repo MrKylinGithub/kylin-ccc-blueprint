@@ -72,6 +72,34 @@
         </div>
       </div>
 
+      <!-- 常量节点的值设置 -->
+      <div v-if="isConstantNode" class="constant-value">
+        <div class="node-param constant-param">
+          <span class="param-name">数值</span>
+          <div class="param-value">
+            <el-input
+              v-if="node.definitionId === 'string_constant'"
+              v-model="node.inputs.value"
+              size="small"
+              placeholder="输入字符串"
+              @input="onInputChange"
+            />
+            <el-input-number
+              v-else-if="node.definitionId === 'number_constant'"
+              v-model="node.inputs.value"
+              size="small"
+              placeholder="输入数字"
+              @change="onInputChange"
+            />
+            <el-switch
+              v-else-if="node.definitionId === 'boolean_constant'"
+              v-model="node.inputs.value"
+              @change="onInputChange"
+            />
+          </div>
+        </div>
+      </div>
+
       <!-- 输出参数 -->
       <div class="node-outputs">
         <div
@@ -224,6 +252,13 @@ const onPortMouseUp = (event: MouseEvent, portType: 'input' | 'output', paramId:
 const onInputChange = () => {
   emit('inputChange');
 };
+
+// 判断是否为常量节点
+const isConstantNode = computed(() => {
+  return props.node.definitionId === 'string_constant' ||
+         props.node.definitionId === 'number_constant' ||
+         props.node.definitionId === 'boolean_constant';
+});
 </script>
 
 <style scoped>
@@ -417,5 +452,32 @@ const onInputChange = () => {
   .param-name {
     font-size: 10px;
   }
+}
+
+/* 常量节点样式 */
+.constant-value {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.constant-param {
+  display: flex;
+  align-items: center;
+  min-height: 24px;
+  justify-content: space-between;
+}
+
+.constant-param .param-name {
+  font-size: 12px;
+  color: #cccccc;
+  margin-right: 8px;
+  white-space: nowrap;
+}
+
+.constant-param .param-value {
+  flex: 1;
+  max-width: 120px;
 }
 </style> 

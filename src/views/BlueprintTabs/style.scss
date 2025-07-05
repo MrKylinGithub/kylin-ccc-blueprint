@@ -252,6 +252,7 @@
 /* 对话框尺寸调整 */
 :deep(.el-dialog) {
   &.file-select-dialog {
+    width: 60% !important;
     height: 80vh !important;
     max-height: 1100px !important;
     
