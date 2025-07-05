@@ -33,7 +33,9 @@
           :key="input.id"
           class="node-param input-param"
         >
+          <!-- 连接槽 - 当noPort为true时不显示 -->
           <div
+            v-if="!input.noPort"
             class="param-port"
             :class="{ 
               'exec-port': input.type === 'exec',
@@ -68,6 +70,20 @@
               v-model="node.inputs[input.id]"
               @change="onInputChange"
             />
+            <el-select
+              v-else-if="input.type === 'select'"
+              v-model="node.inputs[input.id]"
+              size="small"
+              :placeholder="input.defaultValue"
+              @change="onInputChange"
+            >
+              <el-option
+                v-for="option in input.options || []"
+                :key="option"
+                :label="option"
+                :value="option"
+              />
+            </el-select>
           </div>
         </div>
       </div>

@@ -8,9 +8,11 @@ export enum BlueprintType {
 export interface NodeParam {
   id: string;
   name: string;
-  type: 'string' | 'number' | 'boolean' | 'object' | 'exec'; // exec 表示执行流
+  type: 'string' | 'number' | 'boolean' | 'object' | 'exec' | 'select'; // exec 表示执行流，select 表示下拉选择
   defaultValue?: any;
   description?: string;
+  options?: string[]; // 下拉选择的选项，当type为select时使用
+  noPort?: boolean; // 是否不显示连接槽
 }
 
 // 自定义节点定义

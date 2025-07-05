@@ -147,6 +147,13 @@ export const blueprintStore = reactive({
       node.inputs.value = false;
     }
     
+    // 为设置变量节点设置默认值
+    if (definitionId === 'set_variable') {
+      node.inputs.name = 'variable';
+      node.inputs.type = 'string';
+      node.inputs.value = '';
+    }
+    
     blueprint.nodes.push(node);
     this.markTabDirty(this.activeTabId);
     return node;
@@ -799,8 +806,9 @@ blueprintStore.nodeDefinitions.push(
     description: '设置蓝图变量的值',
     inputs: [
       { id: 'exec', name: '执行', type: 'exec' },
-      { id: 'name', name: '变量名', type: 'string', defaultValue: 'variable' },
-      { id: 'value', name: '值', type: 'object' }
+      { id: 'name', name: '变量名', type: 'string', defaultValue: 'variable', noPort: true },
+      { id: 'type', name: '变量类型', type: 'select', defaultValue: 'string', options: ['string', 'number', 'boolean', 'object'], noPort: true },
+      { id: 'value', name: '初始值', type: 'object', noPort: true }
     ],
     outputs: [
       { id: 'exec', name: '执行', type: 'exec' }
