@@ -16,8 +16,7 @@ export interface CreateFormRules extends FormRules {
 }
 
 export interface TabMethods {
-  createNewBlueprint: () => void
-  saveCurrentBlueprint: () => void
-  exportCurrentBlueprint: () => void
-  importBlueprint: () => void
+  saveBlueprint: () => void
+  openBlueprint: () => void
+  exportTypeScript: () => void
 } 

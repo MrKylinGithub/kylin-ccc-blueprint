@@ -112,85 +112,7 @@ export const useBlueprintTabs = () => {
     blueprintStore.closeTab(tabId)
   }
 
-  // 新建蓝图 - 供父组件调用
-  const createNewBlueprint = () => {
-    showCreateDialog.value = true
-  }
 
-  // 保存当前蓝图 - 供父组件调用
-  const saveCurrentBlueprint = () => {
-    const activeTab = blueprintStore.activeTab
-    if (activeTab) {
-      blueprintStore.markTabClean(activeTab.id)
-      if (showMessage && typeof showMessage === 'function') {
-        showMessage({
-          message: `蓝图 "${activeTab.name}" 已保存`,
-          type: 'success',
-          duration: 2000
-        })
-      }
-    }
-  }
-
-  // 导出当前蓝图 - 供父组件调用
-  const exportCurrentBlueprint = () => {
-    const activeTab = blueprintStore.activeTab
-    if (activeTab) {
-      const jsonData = blueprintStore.exportBlueprint(activeTab.id)
-      const blob = new Blob([jsonData], { type: 'application/json' })
-      const url = URL.createObjectURL(blob)
-      const a = document.createElement('a')
-      a.href = url
-      a.download = `${activeTab.name}.bp`
-      a.click()
-      URL.revokeObjectURL(url)
-      
-      if (showMessage && typeof showMessage === 'function') {
-        showMessage({
-          message: `蓝图 "${activeTab.name}" 已导出`,
-          type: 'success',
-          duration: 2000
-        })
-      }
-    }
-  }
-
-  // 导入蓝图 - 供父组件调用
-  const importBlueprint = () => {
-    const input = document.createElement('input')
-    input.type = 'file'
-    input.accept = '.bp'
-    input.onchange = (e) => {
-      const file = (e.target as HTMLInputElement).files?.[0]
-      if (file) {
-        const reader = new FileReader()
-        reader.onload = (e) => {
-          try {
-            const jsonData = e.target?.result as string
-            const success = blueprintStore.importBlueprint(jsonData)
-            
-            if (success && showMessage && typeof showMessage === 'function') {
-              showMessage({
-                message: '蓝图导入成功',
-                type: 'success',
-                duration: 2000
-              })
-            }
-          } catch (error) {
-            if (showMessage && typeof showMessage === 'function') {
-              showMessage({
-                message: '蓝图导入失败，请检查文件格式',
-                type: 'error',
-                duration: 3000
-              })
-            }
-          }
-        }
-        reader.readAsText(file)
-      }
-    }
-    input.click()
-  }
 
   // ========== 新的序列化工具方法 ==========
 
@@ -336,10 +258,9 @@ export const useBlueprintTabs = () => {
 
   // 返回的方法对象
   const methods: TabMethods = {
-    createNewBlueprint,
-    saveCurrentBlueprint: saveBlueprint,
-    exportCurrentBlueprint: exportTypeScript,
-    importBlueprint: loadBlueprint
+    saveBlueprint,
+    openBlueprint: loadBlueprint,
+    exportTypeScript
   }
 
   return {
@@ -360,7 +281,7 @@ export const useBlueprintTabs = () => {
     closeTab,
     methods,
     
-    // 新的序列化方法
+    // 序列化方法
     saveBlueprint,
     loadBlueprint,
     exportTypeScript

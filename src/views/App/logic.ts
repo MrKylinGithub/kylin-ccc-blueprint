@@ -1,5 +1,5 @@
 import { ref, reactive, onMounted, onUnmounted } from 'vue'
-import { Menu, Plus, Document, Download, Upload } from '@element-plus/icons-vue'
+import { Menu, Document, Download, Upload } from '@element-plus/icons-vue'
 import type { AppState, AppRefs, ResizeState, ToolbarAction, AppConfig } from './types'
 
 // 配置常量
@@ -95,20 +95,16 @@ export function useAppLogic() {
   }
 
   // 蓝图操作方法
-  const createNewBlueprint = () => {
-    refs.blueprintTabsRef.value?.createNewBlueprint?.()
-  }
-
   const saveBlueprint = () => {
-    refs.blueprintTabsRef.value?.saveCurrentBlueprint?.()
+    refs.blueprintTabsRef.value?.saveBlueprint?.()
   }
 
-  const exportBlueprint = () => {
-    refs.blueprintTabsRef.value?.exportCurrentBlueprint?.()
+  const openBlueprint = () => {
+    refs.blueprintTabsRef.value?.openBlueprint?.()
   }
 
-  const importBlueprint = () => {
-    refs.blueprintTabsRef.value?.importBlueprint?.()
+  const exportTypeScript = () => {
+    refs.blueprintTabsRef.value?.exportTypeScript?.()
   }
 
   // 工具栏按钮配置
@@ -121,29 +117,22 @@ export function useAppLogic() {
       type: state.showNodeManager ? 'primary' : 'secondary'
     },
     {
-      id: 'new-blueprint',
-      label: '新建蓝图',
-      icon: Plus,
-      action: createNewBlueprint,
-      type: 'primary'
-    },
-    {
       id: 'save-blueprint',
       label: '保存',
       icon: Document,
       action: saveBlueprint
     },
     {
-      id: 'export-blueprint',
-      label: '导出',
-      icon: Download,
-      action: exportBlueprint
+      id: 'open-blueprint',
+      label: '打开',
+      icon: Upload,
+      action: openBlueprint
     },
     {
-      id: 'import-blueprint',
-      label: '导入',
-      icon: Upload,
-      action: importBlueprint
+      id: 'export-typescript',
+      label: '导出TS',
+      icon: Download,
+      action: exportTypeScript
     }
   ]
 
@@ -195,10 +184,9 @@ export function useAppLogic() {
     // 方法
     onResizeStart,
     toggleNodeManager,
-    createNewBlueprint,
     saveBlueprint,
-    exportBlueprint,
-    importBlueprint,
+    openBlueprint,
+    exportTypeScript,
     
     // 样式计算
     nodeManagerPanelStyle

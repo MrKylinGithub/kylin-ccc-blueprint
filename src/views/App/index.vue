@@ -33,25 +33,20 @@
           
           <el-divider direction="vertical" />
           
-          <!-- 其他工具栏按钮 -->
-          <el-button type="primary" size="small" @click="createNewBlueprint">
-            <el-icon><Plus /></el-icon>
-            新建蓝图
-          </el-button>
-          
+          <!-- 蓝图操作按钮 -->
           <el-button size="small" @click="saveBlueprint">
             <el-icon><Document /></el-icon>
             保存
           </el-button>
           
-          <el-button size="small" @click="exportBlueprint">
-            <el-icon><Download /></el-icon>
-            导出
+          <el-button size="small" @click="openBlueprint">
+            <el-icon><Upload /></el-icon>
+            打开
           </el-button>
           
-          <el-button size="small" @click="importBlueprint">
-            <el-icon><Upload /></el-icon>
-            导入
+          <el-button size="small" @click="exportTypeScript">
+            <el-icon><Download /></el-icon>
+            导出TS
           </el-button>
         </div>
         
@@ -69,7 +64,7 @@
 </template>
 
 <script setup lang="ts">
-import { Menu, Plus, Document, Download, Upload } from '@element-plus/icons-vue'
+import { Menu, Document, Download, Upload } from '@element-plus/icons-vue'
 import NodeManager from '../NodeManager/index.vue'
 import BlueprintTabs from '../BlueprintTabs/index.vue'
 import { useAppLogic } from './logic'
@@ -81,10 +76,9 @@ const {
   resizeState,
   onResizeStart,
   toggleNodeManager,
-  createNewBlueprint,
   saveBlueprint,
-  exportBlueprint,
-  importBlueprint,
+  openBlueprint,
+  exportTypeScript,
   nodeManagerPanelStyle
 } = useAppLogic()
 </script>
