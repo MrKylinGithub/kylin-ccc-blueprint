@@ -346,22 +346,25 @@ export class BlueprintSerializer {
   }
 }
 
-// TypeScript代码生成器
+// TypeScript代码生成器 - 生成普通的蓝图函数
 export class TypeScriptCodeGenerator {
   private blueprint: Blueprint
   private nodeDefinitions: NodeDefinition[]
   private nodeMap: Map<string, NodeInstance>
   private connectionMap: Map<string, NodeConnection[]>
+  private inputParams: { name: string; type: string }[] = []
+  private outputParams: { name: string; type: string }[] = []
 
   constructor(blueprint: Blueprint, nodeDefinitions: NodeDefinition[]) {
     this.blueprint = blueprint
     this.nodeDefinitions = nodeDefinitions
     this.nodeMap = new Map(blueprint.nodes.map(node => [node.id, node]))
     this.connectionMap = this.buildConnectionMap()
+    this.analyzeInputOutputs()
   }
 
   /**
-   * 生成TypeScript代码
+   * 生成TypeScript函数代码
    */
   generateCode(): string {
     const code: string[] = []
@@ -370,8 +373,8 @@ export class TypeScriptCodeGenerator {
     code.push(this.generateHeader())
     code.push('')
     
-    // 生成主类
-    code.push(this.generateMainClass())
+    // 生成主函数
+    code.push(this.generateMainFunction())
     
     return code.join('\n')
   }
@@ -382,33 +385,74 @@ export class TypeScriptCodeGenerator {
   private generateHeader(): string {
     return [
       '/**',
-      ` * Generated TypeScript code from blueprint: ${this.blueprint.name}`,
+      ` * Generated from blueprint: ${this.blueprint.name}`,
       ` * Generated at: ${new Date().toISOString()}`,
       ' * Auto-generated - do not modify manually',
       ' */',
       '',
-      '// Blueprint execution engine',
-      'class BlueprintExecutor {',
-      '  private variables: Record<string, any> = {}',
-      '  private outputs: Record<string, any> = {}',
+      '// Helper functions',
+      'function delay(ms: number): Promise<void> {',
+      '  return new Promise(resolve => setTimeout(resolve, ms))',
+      '}',
       '',
-      '  async execute(): Promise<void> {',
-      '    try {',
-      '      await this.executeBlueprint()',
-      '    } catch (error) {',
-      '      console.error("Blueprint execution failed:", error)',
-      '    }',
-      '  }',
-      '',
-      '  private async executeBlueprint(): Promise<void> {'
+      'function log(value: any): void {',
+      '  console.log(value)',
+      '}'
     ].join('\n')
   }
 
   /**
-   * 生成主类的执行逻辑
+   * 分析输入输出参数
    */
-  private generateMainClass(): string {
+  private analyzeInputOutputs(): void {
+    for (const node of this.blueprint.nodes) {
+      const definition = this.getNodeDefinition(node.definitionId)
+      if (!definition) continue
+
+      // 分析输入节点
+      if (definition.id === 'input') {
+        const paramName = node.inputs?.name || 'input'
+        const paramType = node.inputs?.type || 'any'
+        this.inputParams.push({ name: paramName, type: paramType })
+      }
+
+      // 分析输出节点
+      if (definition.id === 'output') {
+        const paramName = node.inputs?.name || 'output'
+        const paramType = node.inputs?.type || 'any'
+        this.outputParams.push({ name: paramName, type: paramType })
+      }
+    }
+  }
+
+  /**
+   * 生成主函数
+   */
+  private generateMainFunction(): string {
     const code: string[] = []
+    
+    // 生成函数签名
+    const functionName = `BP_${this.blueprint.name || 'Blueprint'}`
+    const params = this.inputParams.map(p => `${p.name}: ${p.type}`).join(', ')
+    
+    // 确定返回类型
+    let returnType = 'void'
+    if (this.outputParams.length === 1) {
+      returnType = `Promise<${this.outputParams[0].type}>`
+    } else if (this.outputParams.length > 1) {
+      const returnObj = this.outputParams.map(p => `${p.name}: ${p.type}`).join(', ')
+      returnType = `Promise<{ ${returnObj} }>`
+    } else {
+      returnType = 'Promise<void>'
+    }
+    
+    code.push(`export async function ${functionName}(${params}): ${returnType} {`)
+    
+    // 生成函数体
+    code.push('  // Local variables')
+    code.push('  const locals: Record<string, any> = {}')
+    code.push('  const outputs: Record<string, any> = {}')
+    code.push('')
     
     // 查找开始节点
     const startNodes = this.blueprint.nodes.filter(node => {
@@ -417,32 +461,30 @@ export class TypeScriptCodeGenerator {
     })
 
     if (startNodes.length === 0) {
-      code.push('    // No start node found')
-      code.push('    console.warn("No start node found in blueprint")')
+      code.push('  // No start node found')
+      code.push('  console.warn("No start node found in blueprint")')
     } else {
       // 从开始节点开始执行
+      code.push('  // Execute blueprint logic')
       for (const startNode of startNodes) {
-        code.push(`    // Execute from start node: ${startNode.id}`)
         code.push(...this.generateNodeExecution(startNode))
       }
     }
-
-    code.push('  }')
+    
+    // 生成返回语句
     code.push('')
-    code.push(this.generateHelperMethods())
+    code.push('  // Return results')
+    if (this.outputParams.length === 0) {
+      code.push('  return')
+    } else if (this.outputParams.length === 1) {
+      code.push(`  return outputs['${this.outputParams[0].name}']`)
+    } else {
+      const returnObj = this.outputParams.map(p => `${p.name}: outputs['${p.name}']`).join(', ')
+      code.push(`  return { ${returnObj} }`)
+    }
+    
     code.push('}')
-    code.push('')
-    code.push('// Export and execute')
-    code.push('export async function executeBlueprint() {')
-    code.push('  const executor = new BlueprintExecutor()')
-    code.push('  await executor.execute()')
-    code.push('}')
-    code.push('')
-    code.push('// Auto-execute if run directly')
-    code.push('if (require.main === module) {')
-    code.push('  executeBlueprint()')
-    code.push('}')
-
+    
     return code.join('\n')
   }
 
@@ -450,30 +492,24 @@ export class TypeScriptCodeGenerator {
    * 生成节点执行代码
    */
   private generateNodeExecution(node: NodeInstance, visitedNodes = new Set<string>()): string[] {
-    if (visitedNodes.has(node.id)) {
-      return [`    // Circular reference detected for node ${node.id}`]
-    }
-
-    visitedNodes.add(node.id)
     const code: string[] = []
+    
+    if (visitedNodes.has(node.id)) {
+      return code
+    }
+    
+    visitedNodes.add(node.id)
     const definition = this.getNodeDefinition(node.definitionId)
     
     if (!definition) {
-      code.push(`    // Unknown node type: ${node.definitionId}`)
+      code.push(`  // Unknown node type: ${node.definitionId}`)
       return code
     }
 
-    code.push(`    // Execute node: ${definition.name} (${node.id})`)
+    code.push(`  // Execute node: ${definition.name} (${node.id})`)
     
-    // 根据节点类型生成不同的执行代码
     switch (definition.id) {
-      case 'number_constant':
-        code.push(...this.generateConstantNode(node, definition))
-        break
-      case 'string_constant':
-        code.push(...this.generateConstantNode(node, definition))
-        break
-      case 'boolean_constant':
+      case 'constant':
         code.push(...this.generateConstantNode(node, definition))
         break
       case 'print':
@@ -488,17 +524,22 @@ export class TypeScriptCodeGenerator {
       case 'parallel':
         code.push(...this.generateParallelNode(node, definition, visitedNodes))
         break
+      case 'input':
+        code.push(...this.generateInputNode(node, definition))
+        break
+      case 'output':
+        code.push(...this.generateOutputNode(node, definition))
+        break
       default:
-        code.push(`    // Custom node: ${definition.name}`)
-        code.push(`    console.log("Executing custom node: ${definition.name}")`)
+        code.push(`  // Unsupported node type: ${definition.id}`)
     }
 
-    // 继续执行连接的节点
-    const execConnections = this.getExecutionConnections(node.id)
-    for (const connection of execConnections) {
+    // 执行后续节点
+    const nextConnections = this.getExecutionConnections(node.id)
+    for (const connection of nextConnections) {
       const nextNode = this.nodeMap.get(connection.toNodeId)
       if (nextNode && !visitedNodes.has(nextNode.id)) {
-        code.push(...this.generateNodeExecution(nextNode, new Set(visitedNodes)))
+        code.push(...this.generateNodeExecution(nextNode, visitedNodes))
       }
     }
 
@@ -509,65 +550,60 @@ export class TypeScriptCodeGenerator {
    * 生成常量节点代码
    */
   private generateConstantNode(node: NodeInstance, definition: NodeDefinition): string[] {
-    const valueInput = definition.inputs.find(input => input.id === 'value')
-    const value = node.inputs.value || valueInput?.defaultValue || null
+    const code: string[] = []
+    const value = node.inputs?.value ?? ''
+    const outputParam = definition.outputs.find(o => o.type !== 'exec')
+    const outputId = outputParam?.id || 'output'
     
-    let formattedValue: string
-    if (typeof value === 'string') {
-      formattedValue = `"${value.replace(/"/g, '\\"')}"`
-    } else {
-      formattedValue = String(value)
-    }
-
-    return [
-      `    this.outputs["${node.id}"] = ${formattedValue}`
-    ]
+    code.push(`  locals['${node.id}_${outputId}'] = ${JSON.stringify(value)}`)
+    return code
   }
 
   /**
    * 生成打印节点代码
    */
   private generatePrintNode(node: NodeInstance, definition: NodeDefinition): string[] {
-    const valueConnections = this.getInputConnections(node.id, 'value')
-    let valueSource = 'null'
+    const code: string[] = []
+    const inputParam = definition.inputs.find(i => i.type !== 'exec')
+    const inputId = inputParam?.id || 'input'
     
-    if (valueConnections.length > 0) {
-      const sourceNodeId = valueConnections[0].fromNodeId
-      valueSource = `this.outputs["${sourceNodeId}"]`
+    // 查找输入连接
+    const inputConnections = this.getInputConnections(node.id, inputId)
+    if (inputConnections.length > 0) {
+      const connection = inputConnections[0]
+      const fromOutputId = connection.fromParamId
+      code.push(`  log(locals['${connection.fromNodeId}_${fromOutputId}'])`)
     } else {
-      const value = node.inputs.value || 0
-      valueSource = typeof value === 'string' ? `"${value}"` : String(value)
+      code.push(`  log('${node.inputs?.message || 'Hello World'}')`)
     }
-
-    return [
-      `    console.log(${valueSource})`
-    ]
+    
+    return code
   }
 
   /**
-   * 生成延时节点代码
+   * 生成延迟节点代码
    */
   private generateDelayNode(node: NodeInstance, definition: NodeDefinition): string[] {
-    const duration = node.inputs.duration || 1
-    return [
-      `    await new Promise(resolve => setTimeout(resolve, ${duration * 1000}))`
-    ]
+    const code: string[] = []
+    const duration = node.inputs?.duration || 1000
+    code.push(`  await delay(${duration})`)
+    return code
   }
 
   /**
-   * 生成顺序执行节点代码
+   * 生成序列节点代码
    */
   private generateSequenceNode(node: NodeInstance, definition: NodeDefinition, visitedNodes: Set<string>): string[] {
     const code: string[] = []
     
-    // 按顺序执行每个输出
+    // 按顺序执行输出
     for (const output of definition.outputs) {
       if (output.type === 'exec') {
         const connections = this.getOutputConnections(node.id, output.id)
         for (const connection of connections) {
           const nextNode = this.nodeMap.get(connection.toNodeId)
           if (nextNode && !visitedNodes.has(nextNode.id)) {
-            code.push(`    // Sequence output: ${output.name}`)
+            code.push(`  // Sequence output: ${output.name}`)
             code.push(...this.generateNodeExecution(nextNode, new Set(visitedNodes)))
           }
         }
@@ -578,7 +614,7 @@ export class TypeScriptCodeGenerator {
   }
 
   /**
-   * 生成并行执行节点代码
+   * 生成并行节点代码
    */
   private generateParallelNode(node: NodeInstance, definition: NodeDefinition, visitedNodes: Set<string>): string[] {
     const code: string[] = []
@@ -591,33 +627,59 @@ export class TypeScriptCodeGenerator {
         for (const connection of connections) {
           const nextNode = this.nodeMap.get(connection.toNodeId)
           if (nextNode && !visitedNodes.has(nextNode.id)) {
-            parallelTasks.push(`this.executeNode_${nextNode.id}()`)
+            // 对于并行节点，我们需要创建独立的执行函数
+            const taskName = `task_${connection.toNodeId}`
+            parallelTasks.push(taskName)
+            
+            code.push(`  const ${taskName} = async () => {`)
+            code.push(...this.generateNodeExecution(nextNode, new Set(visitedNodes)).map(line => '  ' + line))
+            code.push('  }')
           }
         }
       }
     }
 
     if (parallelTasks.length > 0) {
-      code.push(`    // Parallel execution`)
-      code.push(`    await Promise.all([${parallelTasks.join(', ')}])`)
+      code.push(`  // Parallel execution`)
+      code.push(`  await Promise.all([${parallelTasks.join(', ')}].map(task => task()))`)
     }
 
     return code
   }
 
   /**
-   * 生成辅助方法
+   * 生成输入节点代码
    */
-  private generateHelperMethods(): string {
-    return [
-      '  private async delay(ms: number): Promise<void> {',
-      '    return new Promise(resolve => setTimeout(resolve, ms))',
-      '  }',
-      '',
-      '  private log(value: any): void {',
-      '    console.log(value)',
-      '  }'
-    ].join('\n')
+  private generateInputNode(node: NodeInstance, definition: NodeDefinition): string[] {
+    const code: string[] = []
+    const paramName = node.inputs?.name || 'input'
+    const outputParam = definition.outputs.find(o => o.type !== 'exec')
+    const outputId = outputParam?.id || 'output'
+    
+    code.push(`  locals['${node.id}_${outputId}'] = ${paramName}`)
+    return code
+  }
+
+  /**
+   * 生成输出节点代码
+   */
+  private generateOutputNode(node: NodeInstance, definition: NodeDefinition): string[] {
+    const code: string[] = []
+    const paramName = node.inputs?.name || 'output'
+    const inputParam = definition.inputs.find(i => i.type !== 'exec')
+    const inputId = inputParam?.id || 'input'
+    
+    // 查找输入连接
+    const inputConnections = this.getInputConnections(node.id, inputId)
+    if (inputConnections.length > 0) {
+      const connection = inputConnections[0]
+      const fromOutputId = connection.fromParamId
+      code.push(`  outputs['${paramName}'] = locals['${connection.fromNodeId}_${fromOutputId}']`)
+    } else {
+      code.push(`  outputs['${paramName}'] = undefined`)
+    }
+    
+    return code
   }
 
   /**
@@ -693,7 +755,7 @@ export class TypeScriptCodeGenerator {
         console.log('尝试使用 Cocos Creator Editor.Message API...')
         try {
           const Editor = (window as any).Editor
-          const fileName = filename || `${this.blueprint.name || 'blueprint'}.ts`
+          const fileName = filename || `BP_${this.blueprint.name || 'Blueprint'}.ts`
           
           // 创建资源 URL，保存到 assets 目录
           const assetUrl = `db://assets/scripts/${fileName}`
@@ -735,7 +797,7 @@ export class TypeScriptCodeGenerator {
           try {
             const electronAPI = (window as any).electronAPI
             if (electronAPI.saveFile) {
-              const defaultFileName = filename || `${this.blueprint.name || 'blueprint'}.ts`
+              const defaultFileName = filename || `BP_${this.blueprint.name || 'Blueprint'}.ts`
               saveResult = await electronAPI.saveFile({
                 title: '保存TypeScript代码',
                 defaultPath: defaultFileName,
@@ -758,7 +820,7 @@ export class TypeScriptCodeGenerator {
           try {
             const { ipcRenderer } = (window as any).electron
             if (ipcRenderer) {
-              const defaultFileName = filename || `${this.blueprint.name || 'blueprint'}.ts`
+              const defaultFileName = filename || `BP_${this.blueprint.name || 'Blueprint'}.ts`
               saveResult = await ipcRenderer.invoke('save-file', {
                 title: '保存TypeScript代码',
                 defaultPath: defaultFileName,
@@ -795,7 +857,7 @@ export class TypeScriptCodeGenerator {
     // 回退到浏览器下载方式
     console.log('开始浏览器下载...')
     try {
-      const fileName = filename || `${this.blueprint.name || 'blueprint'}.ts`
+      const fileName = filename || `BP_${this.blueprint.name || 'Blueprint'}.ts`
       
       // 在 Electron 环境中，尝试使用 data URI 替代 blob URL
       if (isElectron) {
