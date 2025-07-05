@@ -98,6 +98,10 @@ export class BlueprintSerializer {
           const Editor = (window as any).Editor
           const fileName = filename || `${blueprint.name || 'blueprint'}.bp`
           
+          // 检查并获取 blueprints 目录路径
+          const blueprintsPath = await Editor.Message.request('asset-db', 'query-path', 'blueprints')
+          console.log('blueprints 目录路径:', blueprintsPath)
+          
           // 创建资源 URL，保存到 assets/blueprints 目录，使用 .bp 扩展名
           const assetUrl = `db://assets/blueprints/${fileName}`
           
@@ -221,19 +225,28 @@ export class BlueprintSerializer {
         try {
           const Editor = (window as any).Editor
           
-          // 查询 assets/blueprints 目录下的 .bp 文件
-          const blueprintAssetsResult = await Editor.Message.request('asset-db', 'query-assets', {
-            pattern: 'db://assets/blueprints/**/*.bp'
-          })
+          // 获取 blueprints 目录的绝对路径
+          const blueprintsPath = await Editor.Message.request('asset-db', 'query-path', 'blueprints')
+          console.log('blueprints 目录路径:', blueprintsPath)
           
-          console.log('查询到的蓝图资源:', blueprintAssetsResult)
-          
-          if (blueprintAssetsResult && blueprintAssetsResult.length > 0) {
-            return blueprintAssetsResult.map((asset: any) => ({
-              name: asset.name || asset.url.split('/').pop()?.replace('.bp', '') || 'Unknown',
-              url: asset.url,
-              uuid: asset.uuid
-            }))
+          if (blueprintsPath) {
+            // 查询 assets/blueprints 目录下的 .bp 文件
+            const blueprintAssetsResult = await Editor.Message.request('asset-db', 'query-assets', {
+              pattern: 'db://assets/blueprints/**/*.bp'
+            })
+            
+            console.log('查询到的蓝图资源:', blueprintAssetsResult)
+            
+            if (blueprintAssetsResult && blueprintAssetsResult.length > 0) {
+              return blueprintAssetsResult.map((asset: any) => ({
+                name: asset.name || asset.url.split('/').pop()?.replace('.bp', '') || 'Unknown',
+                url: asset.url,
+                uuid: asset.uuid,
+                path: blueprintsPath // 添加绝对路径信息
+              }))
+            }
+          } else {
+            console.log('blueprints 目录不存在或无法访问')
           }
           
           console.log('项目中未找到蓝图文件')
