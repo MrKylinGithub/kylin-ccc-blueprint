@@ -808,7 +808,7 @@ blueprintStore.nodeDefinitions.push(
       { id: 'exec', name: '执行', type: 'exec' },
       { id: 'name', name: '变量名', type: 'string', defaultValue: 'variable', noPort: true },
       { id: 'type', name: '变量类型', type: 'select', defaultValue: 'string', options: ['string', 'number', 'boolean', 'object'], noPort: true },
-      { id: 'value', name: '初始值', type: 'object', noPort: true }
+      { id: 'value', name: '初始值', type: 'string', defaultValue: '', noPort: true }
     ],
     outputs: [
       { id: 'exec', name: '执行', type: 'exec' }
