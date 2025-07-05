@@ -402,16 +402,14 @@ export class BlueprintSerializer {
   }
 
   /**
-   * 获取项目蓝图文件列表并返回给UI层处理选择
+   * 获取项目蓝图文件列表（在 Cocos Creator 环境中总是使用项目文件列表）
    */
-  static async loadBlueprintFromProject(): Promise<{ blueprintList: Array<{ name: string; url: string; uuid: string }> | null, fallback: () => Promise<SerializedBlueprint | null> }> {
+  static async loadBlueprintFromProject(): Promise<Array<{ name: string; url: string; uuid: string }>> {
     // 获取项目中的蓝图文件列表
     const blueprintList = await this.getBlueprintFileList()
     
-    return {
-      blueprintList,
-      fallback: () => this.loadBlueprintFromFileSystem()
-    }
+    // 在 Cocos Creator 环境中，总是返回项目文件列表
+    return blueprintList || []
   }
 
   /**

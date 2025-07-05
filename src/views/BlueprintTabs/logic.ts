@@ -122,23 +122,20 @@ export const useBlueprintTabs = () => {
   // 从项目文件加载蓝图
   const loadBlueprint = async () => {
     try {
-      const result = await BlueprintSerializer.loadBlueprintFromProject()
+      const blueprintList = await BlueprintSerializer.loadBlueprintFromProject()
       
-      if (result.blueprintList && result.blueprintList.length > 0) {
+      if (blueprintList.length > 0) {
         // 有项目文件，显示选择对话框
-        projectBlueprintFiles.value = result.blueprintList
-        selectedFileUuid.value = result.blueprintList[0].uuid
+        projectBlueprintFiles.value = blueprintList
+        selectedFileUuid.value = blueprintList[0].uuid
         showFileSelectDialog.value = true
       } else {
-        // 没有项目文件，直接使用文件系统选择
-        const data = await result.fallback()
-        if (data) {
-          await loadBlueprintData(data)
-        } else if (showMessage && typeof showMessage === 'function') {
+        // 没有项目文件，提示用户
+        if (showMessage && typeof showMessage === 'function') {
           showMessage({
-            message: '加载已取消',
-            type: 'info',
-            duration: 2000
+            message: '项目中没有找到蓝图文件（*.bp），请先保存一个蓝图文件',
+            type: 'warning',
+            duration: 3000
           })
         }
       }
@@ -191,30 +188,7 @@ export const useBlueprintTabs = () => {
     }
   }
   
-  // 选择从文件系统加载
-  const selectFromFileSystem = async () => {
-    showFileSelectDialog.value = false
-    try {
-      const data = await BlueprintSerializer.loadBlueprintFromFileSystem()
-      if (data) {
-        await loadBlueprintData(data)
-      } else if (showMessage && typeof showMessage === 'function') {
-        showMessage({
-          message: '加载已取消',
-          type: 'info',
-          duration: 2000
-        })
-      }
-    } catch (error) {
-      if (showMessage && typeof showMessage === 'function') {
-        showMessage({
-          message: '加载蓝图失败，请检查文件格式',
-          type: 'error',
-          duration: 3000
-        })
-      }
-    }
-  }
+
   
   // 取消文件选择
   const cancelSelectFile = () => {
@@ -315,7 +289,6 @@ export const useBlueprintTabs = () => {
     
     // 文件选择方法
     confirmSelectFile,
-    selectFromFileSystem,
     cancelSelectFile,
     
     // 序列化方法

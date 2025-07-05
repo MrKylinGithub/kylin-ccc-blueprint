@@ -89,9 +89,6 @@
       <template #footer>
         <div class="dialog-footer">
           <el-button @click="cancelSelectFile">取消</el-button>
-          <el-button @click="selectFromFileSystem">
-            从文件系统选择...
-          </el-button>
           <el-button 
             v-if="projectBlueprintFiles.length > 0"
             type="primary" 
@@ -128,7 +125,6 @@ const {
   
   // 文件选择方法
   confirmSelectFile,
-  selectFromFileSystem,
   cancelSelectFile,
   
   // 序列化方法
