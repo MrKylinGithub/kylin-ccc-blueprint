@@ -474,13 +474,16 @@ export class TypeScriptCodeGenerator {
   private connectionMap: Map<string, NodeConnection[]>
   private inputParams: { name: string; type: string }[] = []
   private outputParams: { name: string; type: string }[] = []
+  private usedHelpers: Set<string> = new Set()
+  private hasAsyncNodes: boolean = false
+  private nodeVariables: Map<string, string> = new Map()
 
   constructor(blueprint: Blueprint, nodeDefinitions: NodeDefinition[]) {
     this.blueprint = blueprint
     this.nodeDefinitions = nodeDefinitions
     this.nodeMap = new Map(blueprint.nodes.map(node => [node.id, node]))
     this.connectionMap = this.buildConnectionMap()
-    this.analyzeInputOutputs()
+    this.analyzeBlueprint()
   }
 
   /**
@@ -503,28 +506,40 @@ export class TypeScriptCodeGenerator {
    * 生成文件头部
    */
   private generateHeader(): string {
-    return [
+    const lines = [
       '/**',
       ` * Generated from blueprint: ${this.blueprint.name}`,
       ` * Generated at: ${new Date().toISOString()}`,
       ' * Auto-generated - do not modify manually',
-      ' */',
-      '',
-      '// Helper functions',
-      'function delay(ms: number): Promise<void> {',
-      '  return new Promise(resolve => setTimeout(resolve, ms))',
-      '}',
-      '',
-      'function log(value: any): void {',
-      '  console.log(value)',
-      '}'
-    ].join('\n')
+      ' */'
+    ]
+
+    // 只生成实际使用的helper函数
+    if (this.usedHelpers.size > 0) {
+      lines.push('')
+      lines.push('// Helper functions')
+      
+      if (this.usedHelpers.has('delay')) {
+        lines.push('function delay(ms: number): Promise<void> {')
+        lines.push('  return new Promise(resolve => setTimeout(resolve, ms))')
+        lines.push('}')
+      }
+      
+      if (this.usedHelpers.has('log')) {
+        lines.push('function log(value: any): void {')
+        lines.push('  console.log(value)')
+        lines.push('}')
+      }
+    }
+
+    return lines.join('\n')
   }
 
   /**
-   * 分析输入输出参数
+   * 分析蓝图特性
    */
-  private analyzeInputOutputs(): void {
+  private analyzeBlueprint(): void {
+    // 分析输入输出参数
     for (const node of this.blueprint.nodes) {
       const definition = this.getNodeDefinition(node.definitionId)
       if (!definition) continue
@@ -542,6 +557,26 @@ export class TypeScriptCodeGenerator {
         const paramType = node.inputs?.type || 'any'
         this.outputParams.push({ name: paramName, type: paramType })
       }
+
+      // 分析使用的helper函数
+      if (definition.id === 'print' || definition.id === 'debug_log') {
+        this.usedHelpers.add('log')
+      }
+      if (definition.id === 'delay') {
+        this.usedHelpers.add('delay')
+        this.hasAsyncNodes = true
+      }
+
+      // 为节点输出生成变量名
+      for (const output of definition.outputs) {
+        if (output.type !== 'exec') {
+          // 简化变量名生成
+          const baseName = definition.name.toLowerCase().replace(/[^a-z0-9]/g, '')
+          const nodeIndex = node.id.replace(/[^0-9]/g, '')
+          const varName = `${baseName}_${nodeIndex}_${output.id}`
+          this.nodeVariables.set(`${node.id}_${output.id}`, varName)
+        }
+      }
     }
   }
 
@@ -555,24 +590,41 @@ export class TypeScriptCodeGenerator {
     const functionName = `BP_${this.blueprint.name || 'Blueprint'}`
     const params = this.inputParams.map(p => `${p.name}: ${p.type}`).join(', ')
     
-    // 确定返回类型
+    // 根据是否有异步节点确定返回类型
     let returnType = 'void'
+    let isAsync = this.hasAsyncNodes
+    
     if (this.outputParams.length === 1) {
-      returnType = `Promise<${this.outputParams[0].type}>`
+      returnType = this.outputParams[0].type
+      if (isAsync) returnType = `Promise<${returnType}>`
     } else if (this.outputParams.length > 1) {
       const returnObj = this.outputParams.map(p => `${p.name}: ${p.type}`).join(', ')
-      returnType = `Promise<{ ${returnObj} }>`
-    } else {
+      returnType = `{ ${returnObj} }`
+      if (isAsync) returnType = `Promise<${returnType}>`
+    } else if (isAsync) {
       returnType = 'Promise<void>'
     }
     
-    code.push(`export async function ${functionName}(${params}): ${returnType} {`)
+    const asyncKeyword = isAsync ? 'async ' : ''
+    code.push(`export ${asyncKeyword}function ${functionName}(${params}): ${returnType} {`)
     
-    // 生成函数体
-    code.push('  // Local variables')
-    code.push('  const locals: Record<string, any> = {}')
-    code.push('  const outputs: Record<string, any> = {}')
-    code.push('')
+    // 生成变量声明
+    if (this.nodeVariables.size > 0) {
+      code.push('  // Variables for node outputs')
+      for (const [nodeOutput, varName] of this.nodeVariables) {
+        code.push(`  let ${varName}: any`)
+      }
+      code.push('')
+    }
+    
+    // 输出变量声明
+    if (this.outputParams.length > 0) {
+      code.push('  // Output variables')
+      for (const param of this.outputParams) {
+        code.push(`  let ${param.name}: ${param.type}`)
+      }
+      code.push('')
+    }
     
     // 查找开始节点
     const startNodes = this.blueprint.nodes.filter(node => {
@@ -597,9 +649,9 @@ export class TypeScriptCodeGenerator {
     if (this.outputParams.length === 0) {
       code.push('  return')
     } else if (this.outputParams.length === 1) {
-      code.push(`  return outputs['${this.outputParams[0].name}']`)
+      code.push(`  return ${this.outputParams[0].name}`)
     } else {
-      const returnObj = this.outputParams.map(p => `${p.name}: outputs['${p.name}']`).join(', ')
+      const returnObj = this.outputParams.map(p => `${p.name}`).join(', ')
       code.push(`  return { ${returnObj} }`)
     }
     
@@ -636,6 +688,7 @@ export class TypeScriptCodeGenerator {
         code.push(...this.generateConstantNode(node, definition))
         break
       case 'print':
+      case 'debug_log':
         code.push(...this.generatePrintNode(node, definition))
         break
       case 'delay':
@@ -652,6 +705,22 @@ export class TypeScriptCodeGenerator {
         break
       case 'output':
         code.push(...this.generateOutputNode(node, definition))
+        break
+      case 'add_numbers':
+      case 'subtract_numbers':
+      case 'multiply_numbers':
+      case 'divide_numbers':
+        code.push(...this.generateMathNode(node, definition))
+        break
+      case 'logic_and':
+      case 'logic_or':
+      case 'logic_not':
+        code.push(...this.generateLogicNode(node, definition))
+        break
+      case 'compare_equal':
+      case 'compare_greater':
+      case 'compare_less':
+        code.push(...this.generateCompareNode(node, definition))
         break
       default:
         code.push(`  // Unsupported node type: ${definition.id}`)
@@ -676,9 +745,14 @@ export class TypeScriptCodeGenerator {
     const code: string[] = []
     const value = node.inputs?.value ?? ''
     const outputParam = definition.outputs.find(o => o.type !== 'exec')
-    const outputId = outputParam?.id || 'output'
     
-    code.push(`  locals['${node.id}_${outputId}'] = ${JSON.stringify(value)}`)
+    if (outputParam) {
+      const varName = this.nodeVariables.get(`${node.id}_${outputParam.id}`)
+      if (varName) {
+        code.push(`  ${varName} = ${JSON.stringify(value)}`)
+      }
+    }
+    
     return code
   }
 
@@ -688,16 +762,19 @@ export class TypeScriptCodeGenerator {
   private generatePrintNode(node: NodeInstance, definition: NodeDefinition): string[] {
     const code: string[] = []
     const inputParam = definition.inputs.find(i => i.type !== 'exec')
-    const inputId = inputParam?.id || 'input'
     
-    // 查找输入连接
-    const inputConnections = this.getInputConnections(node.id, inputId)
-    if (inputConnections.length > 0) {
-      const connection = inputConnections[0]
-      const fromOutputId = connection.fromParamId
-      code.push(`  log(locals['${connection.fromNodeId}_${fromOutputId}'])`)
-    } else {
-      code.push(`  log('${node.inputs?.message || 'Hello World'}')`)
+    if (inputParam) {
+      // 查找输入连接
+      const inputConnections = this.getInputConnections(node.id, inputParam.id)
+      if (inputConnections.length > 0) {
+        const connection = inputConnections[0]
+        const varName = this.nodeVariables.get(`${connection.fromNodeId}_${connection.fromParamId}`)
+        if (varName) {
+          code.push(`  log(${varName})`)
+        }
+      } else {
+        code.push(`  log('${node.inputs?.message || 'Hello World'}')`)
+      }
     }
     
     return code
@@ -777,9 +854,14 @@ export class TypeScriptCodeGenerator {
     const code: string[] = []
     const paramName = node.inputs?.name || 'input'
     const outputParam = definition.outputs.find(o => o.type !== 'exec')
-    const outputId = outputParam?.id || 'output'
     
-    code.push(`  locals['${node.id}_${outputId}'] = ${paramName}`)
+    if (outputParam) {
+      const varName = this.nodeVariables.get(`${node.id}_${outputParam.id}`)
+      if (varName) {
+        code.push(`  ${varName} = ${paramName}`)
+      }
+    }
+    
     return code
   }
 
@@ -790,16 +872,19 @@ export class TypeScriptCodeGenerator {
     const code: string[] = []
     const paramName = node.inputs?.name || 'output'
     const inputParam = definition.inputs.find(i => i.type !== 'exec')
-    const inputId = inputParam?.id || 'input'
     
-    // 查找输入连接
-    const inputConnections = this.getInputConnections(node.id, inputId)
-    if (inputConnections.length > 0) {
-      const connection = inputConnections[0]
-      const fromOutputId = connection.fromParamId
-      code.push(`  outputs['${paramName}'] = locals['${connection.fromNodeId}_${fromOutputId}']`)
-    } else {
-      code.push(`  outputs['${paramName}'] = undefined`)
+    if (inputParam) {
+      // 查找输入连接
+      const inputConnections = this.getInputConnections(node.id, inputParam.id)
+      if (inputConnections.length > 0) {
+        const connection = inputConnections[0]
+        const varName = this.nodeVariables.get(`${connection.fromNodeId}_${connection.fromParamId}`)
+        if (varName) {
+          code.push(`  ${paramName} = ${varName}`)
+        }
+      } else {
+        code.push(`  ${paramName} = undefined`)
+      }
     }
     
     return code
@@ -854,6 +939,111 @@ export class TypeScriptCodeGenerator {
     return this.blueprint.connections.filter(
       conn => conn.fromNodeId === nodeId && conn.fromParamId === paramId
     )
+  }
+
+  /**
+   * 生成数学运算节点代码
+   */
+  private generateMathNode(node: NodeInstance, definition: NodeDefinition): string[] {
+    const code: string[] = []
+    const outputParam = definition.outputs.find(o => o.type !== 'exec')
+    
+    if (outputParam) {
+      const varName = this.nodeVariables.get(`${node.id}_${outputParam.id}`)
+      if (varName) {
+        const aConnection = this.getInputConnections(node.id, 'a')[0]
+        const bConnection = this.getInputConnections(node.id, 'b')[0]
+        
+        const aValue = aConnection ? 
+          this.nodeVariables.get(`${aConnection.fromNodeId}_${aConnection.fromParamId}`) || '0' : 
+          (node.inputs?.a || 0)
+        const bValue = bConnection ? 
+          this.nodeVariables.get(`${bConnection.fromNodeId}_${bConnection.fromParamId}`) || '0' : 
+          (node.inputs?.b || 0)
+        
+        let operator = '+'
+        switch (definition.id) {
+          case 'add_numbers': operator = '+'; break
+          case 'subtract_numbers': operator = '-'; break
+          case 'multiply_numbers': operator = '*'; break
+          case 'divide_numbers': operator = '/'; break
+        }
+        
+        code.push(`  ${varName} = ${aValue} ${operator} ${bValue}`)
+      }
+    }
+    
+    return code
+  }
+
+  /**
+   * 生成逻辑运算节点代码
+   */
+  private generateLogicNode(node: NodeInstance, definition: NodeDefinition): string[] {
+    const code: string[] = []
+    const outputParam = definition.outputs.find(o => o.type !== 'exec')
+    
+    if (outputParam) {
+      const varName = this.nodeVariables.get(`${node.id}_${outputParam.id}`)
+      if (varName) {
+        if (definition.id === 'logic_not') {
+          const valueConnection = this.getInputConnections(node.id, 'value')[0]
+          const value = valueConnection ? 
+            this.nodeVariables.get(`${valueConnection.fromNodeId}_${valueConnection.fromParamId}`) || 'false' : 
+            (node.inputs?.value || false)
+          code.push(`  ${varName} = !${value}`)
+        } else {
+          const aConnection = this.getInputConnections(node.id, 'a')[0]
+          const bConnection = this.getInputConnections(node.id, 'b')[0]
+          
+          const aValue = aConnection ? 
+            this.nodeVariables.get(`${aConnection.fromNodeId}_${aConnection.fromParamId}`) || 'false' : 
+            (node.inputs?.a || false)
+          const bValue = bConnection ? 
+            this.nodeVariables.get(`${bConnection.fromNodeId}_${bConnection.fromParamId}`) || 'false' : 
+            (node.inputs?.b || false)
+          
+          const operator = definition.id === 'logic_and' ? '&&' : '||'
+          code.push(`  ${varName} = ${aValue} ${operator} ${bValue}`)
+        }
+      }
+    }
+    
+    return code
+  }
+
+  /**
+   * 生成比较运算节点代码
+   */
+  private generateCompareNode(node: NodeInstance, definition: NodeDefinition): string[] {
+    const code: string[] = []
+    const outputParam = definition.outputs.find(o => o.type !== 'exec')
+    
+    if (outputParam) {
+      const varName = this.nodeVariables.get(`${node.id}_${outputParam.id}`)
+      if (varName) {
+        const aConnection = this.getInputConnections(node.id, 'a')[0]
+        const bConnection = this.getInputConnections(node.id, 'b')[0]
+        
+        const aValue = aConnection ? 
+          this.nodeVariables.get(`${aConnection.fromNodeId}_${aConnection.fromParamId}`) || '0' : 
+          (node.inputs?.a || 0)
+        const bValue = bConnection ? 
+          this.nodeVariables.get(`${bConnection.fromNodeId}_${bConnection.fromParamId}`) || '0' : 
+          (node.inputs?.b || 0)
+        
+        let operator = '==='
+        switch (definition.id) {
+          case 'compare_equal': operator = '==='; break
+          case 'compare_greater': operator = '>'; break
+          case 'compare_less': operator = '<'; break
+        }
+        
+        code.push(`  ${varName} = ${aValue} ${operator} ${bValue}`)
+      }
+    }
+    
+    return code
   }
 
   /**
